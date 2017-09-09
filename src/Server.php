@@ -35,7 +35,7 @@ class Server
         $this->provider      = $provider;
 
         if (!$this->provider->validateCredentials($this->clientId, $this->clientToken)) {
-            throw \SsoPhp\Exception::clientCredentialsInvalid();
+            return $this->errorResponseFromException(\SsoPhp\Exception::clientCredentialsInvalid());
         }
     }
 
