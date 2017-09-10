@@ -6,7 +6,7 @@ class Server
     /**
      * @var string
      */
-    protected $clientId;
+    protected $clientSecret;
 
     /**
      * @var string
@@ -19,22 +19,25 @@ class Server
     protected $provider;
 
     /**
-     * @param string                           $clientId
+     * @param string                           $clientSecret
      * @param string                           $clientToken
      * @param \SsoPhp\Server\ProviderInterface $provider
      *
      * @throws \SsoPhp\Exception
      */
     public function __construct(
-        $clientId,
+        $clientSecret,
         $clientToken,
         \SsoPhp\Server\ProviderInterface $provider
     ) {
-        $this->clientId      = $clientId;
-        $this->clientToken   = $clientToken;
-        $this->provider      = $provider;
+        $this->clientSecret = $clientSecret;
+        $this->clientToken  = $clientToken;
+        $this->provider     = $provider;
 
-        if (!$this->provider->validateCredentials($this->clientId, $this->clientToken)) {
+        $this->provider->setClientSecret($clientSecret);
+        $this->provider->setClientToken($clientToken);
+
+        if (!$this->provider->validateCredentials($clientSecret, $clientToken)) {
             return $this->errorResponseFromException(\SsoPhp\Exception::clientCredentialsInvalid());
         }
     }
@@ -44,7 +47,7 @@ class Server
      */
     public function connect()
     {
-        if (!$this->provider->validateCredentials($this->clientId, $this->clientToken)) {
+        if (!$this->provider->validateCredentials($this->clientSecret, $this->clientToken)) {
             return $this->errorResponseFromException(\SsoPhp\Exception::clientCredentialsInvalid());
         }
 
@@ -94,7 +97,8 @@ class Server
         }
 
         return $this->successResponse([
-            "token" => $this->provider->generateToken($username)
+            "token" => $this->provider->generateToken($username),
+            "user"  => $this->provider->getUserFromUsername($username)
         ]);
     }
 
@@ -154,7 +158,9 @@ class Server
             return $this->errorResponseFromException(\SsoPhp\Exception::tokenValidationFailed());
         }
 
-        return $this->successResponse();
+        return $this->successResponse([
+            "user"  => $this->provider->getUserFromUsername($username)
+        ]);
     }
 
     /**

@@ -37,7 +37,7 @@ When this is all set up, we can make requests from our client application.
 Internal mode means it's all handled by the sso-php client and server without any outside functionality.
 
 We start a Client instance:  
-`$client = new \SsoPhp\Client("client-id", "client-token-goes-here", "http://x.dev/sso/");`
+`$client = new \SsoPhp\Client("client-secret", "client-token-goes-here", "http://x.dev/sso/");`
 
 We then connect to see if the server's available and our client-id/token is correct.
 
@@ -49,13 +49,18 @@ To log in a user, allow them to fill in their user/password combo and then call 
 
 `$response = $client->login($username, $password);`
 
-If the login attempt is successful, a token is returned in `$response["data"]["token"]`. If you want to validate the
-token from time to time, make sure to store the username and token somewhere client-side so you can make subsequent
-calls. If you plan to handle the login logic on the client side, then this is all you need.
+If the login attempt is successful, the return value of `$client->generateToken($username)` is returned in 
+`$response["data"]["token"]`. A representation of the user (as defined by the provider's 
+`getUserFromUsername($username)`) is returned in `$response["data"]["user"]`. What's in there is up to the
+implementation. If you want to validate the token from time to time, make sure to store the user and 
+token data somewhere client-side so you can make subsequent calls. If you plan to handle the login logic on the client 
+side, then this is all you need.
 
 To validate an existing token:
 
 `$response = $client->validateToken($username, $token);`
+
+This will return the user representation in `$response["data"]["user"]` like `login(...)` does.
 
 And to log a user out:
 

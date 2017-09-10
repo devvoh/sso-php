@@ -3,41 +3,13 @@ namespace SsoPhp;
 
 class Exception extends \Exception
 {
-    const CLIENT_ID_NOT_SET              = 10;
-    const CLIENT_TOKEN_NOT_SET           = 20;
-    const NO_PROVIDER_AVAILABLE          = 30;
-    const CLIENT_CREDENTIALS_INVALID     = 40;
-    const LOGIN_FAILED                   = 50;
-    const TOKEN_VALIDATION_FAILED        = 60;
-    const INVALID_AUTHORIZATION_HEADER   = 70;
-    const LOGIN_URL_GENERATION_FAILED    = 80;
-    const REGISTER_URL_GENERATION_FAILED = 90;
-    const SERVER_ENDPOINT_NOT_SET        = 100;
-    const SERVER_RETURNED_ERROR          = 110;
-
-    /**
-     * @return static
-     */
-    public static function clientIdNotSet()
-    {
-        return new static("Client ID not set", self::CLIENT_ID_NOT_SET);
-    }
-
-    /**
-     * @return static
-     */
-    public static function clientTokenNotSet()
-    {
-        return new static("Client token not set", self::CLIENT_TOKEN_NOT_SET);
-    }
-
-    /**
-     * @return static
-     */
-    public static function noProviderAvailable()
-    {
-        return new static("No provider available", self::NO_PROVIDER_AVAILABLE);
-    }
+    const CLIENT_CREDENTIALS_INVALID     = 10;
+    const LOGIN_FAILED                   = 20;
+    const TOKEN_VALIDATION_FAILED        = 30;
+    const INVALID_AUTHORIZATION_HEADER   = 40;
+    const LOGIN_URL_GENERATION_FAILED    = 50;
+    const REGISTER_URL_GENERATION_FAILED = 60;
+    const TOKEN_REVOCATION_FAILED        = 70;
 
     /**
      * @return static
@@ -93,21 +65,5 @@ class Exception extends \Exception
     public static function registerUrlGenerationFailed()
     {
         return new static("Register url generation failed", self::REGISTER_URL_GENERATION_FAILED);
-    }
-
-    /**
-     * @return static
-     */
-    public static function serverEndpointNotSet()
-    {
-        return new static("Server endpoint not set", self::SERVER_ENDPOINT_NOT_SET);
-    }
-
-    /**
-     * @return static
-     */
-    public static function fromServerErrorResponse(array $response)
-    {
-        return new static("Server returned error: {$response["error"]}", self::SERVER_RETURNED_ERROR);
     }
 }

@@ -6,7 +6,7 @@ class Client
     /**
      * @var string
      */
-    protected $clientId;
+    protected $clientSecret;
 
     /**
      * @var string
@@ -19,18 +19,18 @@ class Client
     protected $serverUrl;
 
     /**
-     * @param string $clientId
+     * @param string $clientSecret
      * @param string $clientToken
      * @param string $serverUrl
      */
     public function __construct(
-        $clientId,
+        $clientSecret,
         $clientToken,
         $serverUrl
     ) {
-        $this->clientId    = $clientId;
-        $this->clientToken = $clientToken;
-        $this->serverUrl   = rtrim($serverUrl, "/");
+        $this->clientSecret = $clientSecret;
+        $this->clientToken  = $clientToken;
+        $this->serverUrl    = rtrim($serverUrl, "/");
 
         if (substr($this->serverUrl, -1) !== "=") {
             $this->serverUrl .= "/";
@@ -42,12 +42,7 @@ class Client
      */
     public function connect()
     {
-        $response = $this->makeRequest("connect", [
-            "client_id"    => $this->clientId,
-            "client_token" => $this->clientToken,
-        ]);
-
-        return $response;
+        return $this->makeRequest("connect");
     }
 
     /**
@@ -135,8 +130,8 @@ class Client
         curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
 
-        $headers["client_id"] = $this->clientId;
-        $headers["client_token"] = $this->clientToken;
+        $headers["client_secret"] = $this->clientSecret;
+        $headers["client_token"]  = $this->clientToken;
 
         $headersBuilt = [];
         foreach ($headers as $key => $value) {

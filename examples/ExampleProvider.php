@@ -3,8 +3,19 @@ namespace Test;
 
 class ExampleProvider implements \SsoPhp\Server\ProviderInterface
 {
+    /** @var string */
+    protected $clientSecret;
+
+    /** @var string */
+    protected $clientToken;
+
+    /** @var string */
     protected $tokenStorageFile = __DIR__ . "/token_storage.json";
+
+    /** @var array */
     protected $tokenStorage = [];
+
+    /** @var string */
     protected $accountEndpoint = "https://x.com/";
 
     public function __construct()
@@ -23,12 +34,30 @@ class ExampleProvider implements \SsoPhp\Server\ProviderInterface
     /**
      * @inheritdoc
      */
-    public function validateCredentials($clientId, $clientToken)
+    public function setClientSecret($clientSecret)
     {
-        if ($clientId !== "a78dg4") {
+        $this->clientSecret = $clientSecret;
+        return $this;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function setClientToken($clientToken)
+    {
+        $this->clientToken = $clientToken;
+        return $this;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function validateCredentials()
+    {
+        if ($this->clientSecret !== "a78dg4") {
             return false;
         }
-        if ($clientToken !== "client-token-goes-here") {
+        if ($this->clientToken !== "client-token-goes-here") {
             return false;
         }
         return true;
@@ -108,6 +137,15 @@ class ExampleProvider implements \SsoPhp\Server\ProviderInterface
         // This is why we 'fake' the username to a uniqid, to use the test system's token storage.
         $token = $this->generateToken("login_" . uniqid());
         return "{$this->accountEndpoint}/login/{$token}";
+    }
+
+    public function getUserFromUsername($username)
+    {
+        // Normally you'd return a representation of the user here, for the external service to make use of.
+        // This is useful to return at least a user id to make sure any links to a user account made externally
+        // keep pointing to the same user, even if the username is ever changed. In this dirty filesystem storage,
+        // we of course don't have proper ids, so we just return the username in an array.
+        return ["username" => $username];
     }
 
     public function loadStorage()
