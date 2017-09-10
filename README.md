@@ -75,7 +75,7 @@ implementation. You can make it as extravagant or simple as you want.
 External mode means login and registration is done on an external site (usually the account management application).
 
 We start a Client instance:  
-`$client = new \SsoPhp\Client("client-id", "client-token-goes-here", "http://x.dev/sso/");`
+`$client = new \SsoPhp\Client("client-secret", "client-token-goes-here", "http://x.dev/sso/");`
 
 We can then generate the required urls:
 
