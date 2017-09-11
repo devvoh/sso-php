@@ -86,9 +86,10 @@ interface ProviderInterface
      * Get a user object, array, string, whatever, for the given username. How to implement this is completely
      * dependent upon the implementation on both Client's and Server's side.
      *
-     * @param string $username
+     * @param string $context one of the methods calling it defined on \SsoPhp\Server
+     * @param array  $data    an array of data provided by the calling methods
      *
-     * @return mixed
+     * @return array
      */
-    public function getUserFromUsername($username);
+    public function getMetadataForContext($context, array $data);
 }

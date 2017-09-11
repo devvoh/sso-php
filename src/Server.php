@@ -37,7 +37,7 @@ class Server
         $this->provider->setClientSecret($clientSecret);
         $this->provider->setClientToken($clientToken);
 
-        if (!$this->provider->validateCredentials($clientSecret, $clientToken)) {
+        if (!$this->provider->validateCredentials()) {
             return $this->errorResponseFromException(\SsoPhp\Exception::clientCredentialsInvalid());
         }
     }
@@ -47,40 +47,39 @@ class Server
      */
     public function connect()
     {
-        if (!$this->provider->validateCredentials($this->clientSecret, $this->clientToken)) {
+        if (!$this->provider->validateCredentials()) {
             return $this->errorResponseFromException(\SsoPhp\Exception::clientCredentialsInvalid());
         }
 
-        return $this->successResponse();
-    }
-
-    /**
-     * @return array
-     */
-    public function generateLoginUrl()
-    {
-        $url = $this->provider->generateLoginUrl();
-        if (!$url) {
-            return $this->errorResponseFromException(\SsoPhp\Exception::loginUrlGenerationFailed());
-        }
+        $metadata = $this->provider->getMetadataForContext("connect", [
+            "clientSecret" => $this->clientSecret,
+            "clientToken"  => $this->clientToken,
+        ]);
 
         return $this->successResponse([
-            "url" => $url
+            "metadata" => $metadata,
         ]);
     }
 
     /**
+     * @param string $username
+     * @param string $token
+     *
      * @return array
      */
-    public function generateRegisterUrl()
+    public function validateToken($username, $token)
     {
-        $url = $this->provider->generateRegisterUrl();
-        if (!$url) {
-            return $this->errorResponseFromException(\SsoPhp\Exception::registerUrlGenerationFailed());
+        if (!$this->provider->validateToken($username, $token)) {
+            return $this->errorResponseFromException(\SsoPhp\Exception::tokenValidationFailed());
         }
 
+        $metadata = $this->provider->getMetadataForContext("validateToken", [
+            "username" => $username,
+            "token"    => $token
+        ]);
+
         return $this->successResponse([
-            "url" => $url
+            "metadata" => $metadata
         ]);
     }
 
@@ -96,39 +95,17 @@ class Server
             return $this->errorResponseFromException(\SsoPhp\Exception::loginFailed());
         }
 
-        return $this->successResponse([
-            "token" => $this->provider->generateToken($username),
-            "user"  => $this->provider->getUserFromUsername($username)
+        $token = $this->provider->generateToken($username);
+
+        $metadata = $this->provider->getMetadataForContext("login", [
+            "username" => $username,
+            "token"    => $token
         ]);
-    }
 
-    /**
-     * @param string $authorization
-     *
-     * @return array
-     */
-    public function parseAuthorizationHeader($authorization)
-    {
-        if (stripos($authorization, "Basic ") !== false) {
-            $authorization = str_ireplace("Basic ", "", $authorization);
-        } elseif (stripos($authorization, "Bearer ") !== false) {
-            $authorization = str_ireplace("Bearer ", "", $authorization);
-        }
-
-        $authorizationDecoded = base64_decode($authorization);
-        if (strlen($authorizationDecoded) !== mb_strlen($authorizationDecoded)) {
-            return $this->errorResponse(\SsoPhp\Exception::invalidAuthorizationHeader());
-        }
-
-        $authorizationParts = explode(":", $authorizationDecoded);
-        if (count($authorizationParts) !== 2) {
-            return $this->errorResponse(\SsoPhp\Exception::invalidAuthorizationHeader());
-        }
-
-        return [
-            "username" => $authorizationParts[0],
-            "password" => $authorizationParts[1],
-        ];
+        return $this->successResponse([
+            "token"    => $token,
+            "metadata" => $metadata,
+        ]);
     }
 
     /**
@@ -143,23 +120,53 @@ class Server
             return $this->errorResponseFromException(\SsoPhp\Exception::tokenRevocationFailed());
         }
 
-        return $this->successResponse();
+        $metadata = $this->provider->getMetadataForContext("logout", [
+            "username" => $username,
+            "token"    => $token
+        ]);
+
+        return $this->successResponse([
+            "metadata" => $metadata,
+        ]);
     }
 
     /**
-     * @param string $username
-     * @param string $token
-     *
      * @return array
      */
-    public function validateToken($username, $token)
+    public function generateRegisterUrl()
     {
-        if (!$this->provider->validateToken($username, $token)) {
-            return $this->errorResponseFromException(\SsoPhp\Exception::tokenValidationFailed());
+        $url = $this->provider->generateRegisterUrl();
+        if (!$url) {
+            return $this->errorResponseFromException(\SsoPhp\Exception::registerUrlGenerationFailed());
         }
 
+        $metadata = $this->provider->getMetadataForContext("generateRegisterUrl", [
+            "url" => $url
+        ]);
+
         return $this->successResponse([
-            "user"  => $this->provider->getUserFromUsername($username)
+            "url"      => $url,
+            "metadata" => $metadata,
+        ]);
+    }
+
+    /**
+     * @return array
+     */
+    public function generateLoginUrl()
+    {
+        $url = $this->provider->generateLoginUrl();
+        if (!$url) {
+            return $this->errorResponseFromException(\SsoPhp\Exception::loginUrlGenerationFailed());
+        }
+
+        $metadata = $this->provider->getMetadataForContext("generateLoginUrl", [
+            "url" => $url
+        ]);
+
+        return $this->successResponse([
+            "url"      => $url,
+            "metadata" => $metadata,
         ]);
     }
 
@@ -220,5 +227,34 @@ class Server
             $response["code"] = $code;
         }
         return $response;
+    }
+
+    /**
+     * @param string $authorization
+     *
+     * @return array
+     */
+    public function parseAuthorizationHeader($authorization)
+    {
+        if (stripos($authorization, "Basic ") !== false) {
+            $authorization = str_ireplace("Basic ", "", $authorization);
+        } elseif (stripos($authorization, "Bearer ") !== false) {
+            $authorization = str_ireplace("Bearer ", "", $authorization);
+        }
+
+        $authorizationDecoded = base64_decode($authorization);
+        if (strlen($authorizationDecoded) !== mb_strlen($authorizationDecoded)) {
+            return $this->errorResponse(\SsoPhp\Exception::invalidAuthorizationHeader());
+        }
+
+        $authorizationParts = explode(":", $authorizationDecoded);
+        if (count($authorizationParts) !== 2) {
+            return $this->errorResponse(\SsoPhp\Exception::invalidAuthorizationHeader());
+        }
+
+        return [
+            "username" => $authorizationParts[0],
+            "password" => $authorizationParts[1],
+        ];
     }
 }

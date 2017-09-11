@@ -50,9 +50,7 @@ To log in a user, allow them to fill in their user/password combo and then call 
 `$response = $client->login($username, $password);`
 
 If the login attempt is successful, the return value of `$client->generateToken($username)` is returned in 
-`$response["data"]["token"]`. A representation of the user (as defined by the provider's 
-`getUserFromUsername($username)`) is returned in `$response["data"]["user"]`. What's in there is up to the
-implementation. If you want to validate the token from time to time, make sure to store the user and 
+`$response["data"]["token"]`.If you want to validate the token from time to time, make sure to store the user and 
 token data somewhere client-side so you can make subsequent calls. If you plan to handle the login logic on the client 
 side, then this is all you need.
 
@@ -89,3 +87,12 @@ $registerUrl = $response["data"]["url"];
 
 How you handle login/registration and then get the tokens back to the Client is up to you. From that point, you can
 simply `validateToken()` with the code mentioned above.
+
+## Metadata
+
+For every method defined on the `\SsoPhp\Server\ProviderInterface`, the `getMetadataForContext()` method is called
+with two parameters: `$context`, which is the method name calling it (on `Server`), and `$data`, an array with variables 
+known to the calling method (`$username` and `$token` for `validateToken()`, for example).
+
+This method can be used to add arbitrary metadata to response objects as you see fit. For `login()`, it can be used
+to add a user object to the metadata. For `validateToken()`, you could add the token's expiry time.

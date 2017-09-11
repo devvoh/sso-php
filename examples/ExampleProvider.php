@@ -139,13 +139,18 @@ class ExampleProvider implements \SsoPhp\Server\ProviderInterface
         return "{$this->accountEndpoint}/login/{$token}";
     }
 
-    public function getUserFromUsername($username)
+    /**
+     * @inheritdoc
+     */
+    public function getMetadataForContext($context, array $data)
     {
-        // Normally you'd return a representation of the user here, for the external service to make use of.
-        // This is useful to return at least a user id to make sure any links to a user account made externally
-        // keep pointing to the same user, even if the username is ever changed. In this dirty filesystem storage,
-        // we of course don't have proper ids, so we just return the username in an array.
-        return ["username" => $username];
+        // It's possible to generate metadata for specific contexts here
+        switch ($context) {
+            case "login":
+            case "validateToken":
+                return ["username" => $data["username"]];
+        }
+        return [];
     }
 
     public function loadStorage()
