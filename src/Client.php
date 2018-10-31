@@ -1,4 +1,5 @@
 <?php
+
 namespace SsoPhp;
 
 class Client
@@ -18,42 +19,33 @@ class Client
      */
     protected $serverUrl;
 
-    /**
-     * @param string $clientSecret
-     * @param string $clientToken
-     * @param string $serverUrl
-     */
     public function __construct(
-        $clientSecret,
-        $clientToken,
-        $serverUrl
+        string $clientSecret,
+        string $clientToken,
+        string $serverUrl
     ) {
         $this->clientSecret = $clientSecret;
-        $this->clientToken  = $clientToken;
-        $this->serverUrl    = rtrim($serverUrl, "/");
+        $this->clientToken = $clientToken;
+        $this->serverUrl = rtrim($serverUrl, "/");
 
-        if (substr($this->serverUrl, -1) !== "=") {
+        if (mb_substr($this->serverUrl, -1) !== "=") {
             $this->serverUrl .= "/";
         }
     }
 
-    /**
-     * @return array
-     */
-    public function connect()
+    public function getServerUrl(): string
+    {
+        return $this->serverUrl;
+    }
+
+    public function connect(): array
     {
         return $this->makeRequest("connect");
     }
 
-    /**
-     * @param string $username
-     * @param string $password
-     *
-     * @return array
-     */
-    public function login($username, $password)
+    public function login(string $username, string $password): array
     {
-        $authorization = base64_encode("{$username}:{$password}");
+        $authorization = $this->buildAuthorization($username, $password);
 
         $response = $this->makeRequest("login", [
             "Authorization" => "Basic {$authorization}",
@@ -62,15 +54,9 @@ class Client
         return $response;
     }
 
-    /**
-     * @param string $username
-     * @param string $token
-     *
-     * @return array
-     */
-    public function logout($username, $token)
+    public function logout(string $username, string $token): array
     {
-        $authorization = base64_encode("{$username}:{$token}");
+        $authorization = $this->buildAuthorization($username, $token);
 
         $response = $this->makeRequest("logout", [
             "Authorization" => "Bearer {$authorization}",
@@ -79,15 +65,9 @@ class Client
         return $response;
     }
 
-    /**
-     * @param string $username
-     * @param string $token
-     *
-     * @return array
-     */
-    public function validateToken($username, $token)
+    public function validateToken(string $username, string $token): array
     {
-        $authorization = base64_encode("{$username}:{$token}");
+        $authorization = $this->buildAuthorization($username, $token);
 
         $response = $this->makeRequest("validateToken", [
             "Authorization" => "Bearer {$authorization}",
@@ -96,31 +76,30 @@ class Client
         return $response;
     }
 
-    /**
-     * @return array
-     */
-    public function generateRegisterUrl()
+    public function generateRegisterUrl(): array
     {
         $response = $this->makeRequest("generateRegisterUrl");
+
         return $response;
     }
 
-    /**
-     * @return array
-     */
-    public function generateLoginUrl()
+    public function generateLoginUrl(): array
     {
         $response = $this->makeRequest("generateLoginUrl");
+
         return $response;
     }
 
-    /**
-     * @param string $call
-     * @param array  $headers
-     *
-     * @return array
-     */
-    protected function makeRequest($call, array $headers = [])
+    protected function buildAuthorization(string $username, string $passwordOrToken): string
+    {
+        return base64_encode(sprintf(
+            '%s:%s',
+            $username,
+            $passwordOrToken
+        ));
+    }
+
+    protected function makeRequest(string $call, array $headers = []): array
     {
         $url = $this->serverUrl . ltrim($call, "/");
 
@@ -131,21 +110,22 @@ class Client
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
 
         $headers["client_secret"] = $this->clientSecret;
-        $headers["client_token"]  = $this->clientToken;
+        $headers["client_token"] = $this->clientToken;
 
         $headersBuilt = [];
         foreach ($headers as $key => $value) {
             $headersBuilt[] = "{$key}: {$value}";
         }
+
         curl_setopt($curl, CURLOPT_HTTPHEADER, $headersBuilt);
 
-        $response = curl_exec($curl);
+        $jsonResponse = curl_exec($curl);
         curl_close($curl);
 
-        $response = json_decode($response, true);
+        $response = json_decode($jsonResponse, true);
 
         if (json_last_error() !== JSON_ERROR_NONE || !is_array($response)) {
-            return ["call" => $call, "error" => "Response was not valid"];
+            return ["call" => $call, "error" => "Response was not valid", "response" => $jsonResponse];
         }
 
         $response["call"] = $call;

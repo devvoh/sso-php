@@ -1,7 +1,8 @@
 <?php
-namespace Test;
 
-class ExampleProvider implements \SsoPhp\Server\ProviderInterface
+use SsoPhp\Server\ProviderInterface;
+
+class ExampleProvider implements ProviderInterface
 {
     /** @var string */
     protected $clientSecret;
@@ -23,6 +24,7 @@ class ExampleProvider implements \SsoPhp\Server\ProviderInterface
         if (!file_exists($this->tokenStorageFile)) {
             @touch($this->tokenStorageFile);
         }
+
         $this->loadStorage();
     }
 
@@ -31,83 +33,63 @@ class ExampleProvider implements \SsoPhp\Server\ProviderInterface
         $this->saveStorage();
     }
 
-    /**
-     * @inheritdoc
-     */
-    public function setClientSecret($clientSecret)
+    public function setClientSecret(string $clientSecret): void
     {
         $this->clientSecret = $clientSecret;
-        return $this;
     }
 
-    /**
-     * @inheritdoc
-     */
-    public function setClientToken($clientToken)
+    public function setClientToken(string $clientToken): void
     {
         $this->clientToken = $clientToken;
-        return $this;
     }
 
-    /**
-     * @inheritdoc
-     */
-    public function validateCredentials()
+    public function validateCredentials(): bool
     {
-        if ($this->clientSecret !== "a78dg4") {
+        if ($this->clientSecret !== 'secret') {
             return false;
         }
-        if ($this->clientToken !== "client-token-goes-here") {
+
+        if ($this->clientToken !== 'client-token-goes-here') {
             return false;
         }
+
         return true;
     }
 
-    /**
-     * @inheritdoc
-     */
-    public function validateLogin($username, $password)
+    public function validateLogin(string $username, string $password): bool
     {
-        if ($username !== "user") {
+        if ($username !== 'user' || $password !== 'pass') {
             return false;
         }
-        if ($password !== "pass") {
-            return false;
-        }
+
         return true;
     }
 
-    /**
-     * @inheritdoc
-     */
-    public function validateToken($username, $token)
+    public function validateToken(string $username, string $token): bool
     {
         if (!isset($this->tokenStorage[$username])) {
             return false;
         }
+
         if ($this->tokenStorage[$username] !== $token) {
             return false;
         }
+
         return true;
     }
 
-    /**
-     * @inheritdoc
-     */
-    public function revokeToken($username, $token)
+    public function revokeToken(string $username, string $token): bool
     {
         if (!$this->validateToken($username, $token)) {
             return false;
         }
 
         unset($this->tokenStorage[$username]);
+
         return true;
     }
 
-    /**
-     * @inheritdoc
-     */
-    public function generateToken($username)
+    public function generateToken(string $username): string
     {
         $token = bin2hex(openssl_random_pseudo_bytes(16));
         $token = substr_replace($token, uniqid(), 16, 0);
@@ -117,32 +99,29 @@ class ExampleProvider implements \SsoPhp\Server\ProviderInterface
         return $token;
     }
 
-    /**
-     * @inheritdoc
-     */
-    public function generateRegisterUrl()
+    public function generateRegisterUrl(): string
     {
         // Normally you'd generate a token differently and store it so your 'endpoint' pages can pick it up.
         // This is why we 'fake' the username to a uniqid, to use the test system's token storage.
-        $token = $this->generateToken("register_" . uniqid());
-        return "{$this->accountEndpoint}/register/{$token}";
+        return sprintf(
+            '%s/register/%s',
+            $this->accountEndpoint,
+            $this->generateToken("register_" . uniqid())
+        );
     }
 
-    /**
-     * @inheritdoc
-     */
-    public function generateLoginUrl()
+    public function generateLoginUrl(): string
     {
         // Normally you'd generate a token differently and store it so your 'endpoint' pages can pick it up.
         // This is why we 'fake' the username to a uniqid, to use the test system's token storage.
-        $token = $this->generateToken("login_" . uniqid());
-        return "{$this->accountEndpoint}/login/{$token}";
+        return sprintf(
+            '%s/login/%s',
+            $this->accountEndpoint,
+            $this->generateToken("login" . uniqid())
+        );
     }
 
-    /**
-     * @inheritdoc
-     */
-    public function getMetadataForContext($context, array $data)
+    public function getMetadataForContext(string $context, array $data): array
     {
         // It's possible to generate metadata for specific contexts here
         switch ($context) {
@@ -153,13 +132,13 @@ class ExampleProvider implements \SsoPhp\Server\ProviderInterface
         return [];
     }
 
-    public function loadStorage()
+    protected function loadStorage(): void
     {
         $storage = file_get_contents($this->tokenStorageFile);
         $this->tokenStorage = json_decode($storage, true);
     }
 
-    public function saveStorage()
+    protected function saveStorage(): void
     {
         $storage = json_encode($this->tokenStorage);
         file_put_contents($this->tokenStorageFile, $storage);
