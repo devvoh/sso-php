@@ -13,14 +13,19 @@ $server = new Server(
 
 header("content-type: application/json");
 
-if (!isset($_GET['action'])) {
+$action = $_GET['action'] ?? null;
+
+if ($action === null) {
     echo json_encode(['status' => 'error']);
     return;
 }
 
-switch ($_GET['action']) {
+switch ($action) {
     case 'connect':
         echo json_encode($server->connect());
+        return;
+    case 'register':
+        echo json_encode($server->register());
         return;
     case 'login':
         echo json_encode($server->login());

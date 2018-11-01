@@ -55,6 +55,38 @@ class Server
         ]);
     }
 
+    public function register(): array
+    {
+        $authorization = $_POST['authorization'] ?? null;
+
+        if ($authorization === null) {
+            return $this->errorResponseFromException(
+                Exception::registerFailed()
+            );
+        }
+
+        [$username, $password] = $this->parseAuthorization($authorization);
+
+        $context = $_POST['context'] ?? [];
+
+        if (!$this->provider->registerUser($username, $password, $context)) {
+            return $this->errorResponseFromException(
+                Exception::registerFailed()
+            );
+        }
+
+        $metadata = $this->provider->getMetadataForContext(
+            "login",
+            [
+                "username" => $username
+            ]
+        );
+
+        return $this->successResponse([
+            "metadata" => $metadata,
+        ]);
+    }
+
     public function login(): array
     {
         [$username, $password] = $this->parseAuthorization();
@@ -86,7 +118,9 @@ class Server
         [$username, $token] = $this->parseAuthorization();
 
         if (!$this->provider->validateToken($username, $token)) {
-            return $this->errorResponseFromException(Exception::tokenValidationFailed());
+            return $this->errorResponseFromException(
+                Exception::tokenValidationFailed()
+            );
         }
 
         $metadata = $this->provider->getMetadataForContext(
@@ -171,9 +205,15 @@ class Server
         ]);
     }
 
-    protected function parseAuthorization(): array
+    protected function parseAuthorization(string $authorization = null): array
     {
-        $authorization = $this->getAuthorizationFromHeader();
+        if ($authorization === null) {
+            try {
+                $authorization = $this->getAuthorizationFromHeader();
+            } catch (Exception $e) {
+                return ["", ""];
+            }
+        }
 
         if (mb_stripos($authorization, "Basic ") !== false) {
             $authorization = str_ireplace("Basic ", "", $authorization);
@@ -183,30 +223,30 @@ class Server
 
         $authorizationDecoded = base64_decode($authorization);
         if (mb_strlen($authorizationDecoded) !== mb_strlen($authorizationDecoded)) {
-            return $this->errorResponse(
-                Exception::invalidAuthorizationHeader()
-            );
+            return ["", ""];
         }
 
         $authorizationParts = explode(":", $authorizationDecoded);
         if (count($authorizationParts) !== 2) {
-            return $this->errorResponse(
-                Exception::invalidAuthorizationHeader()
-            );
+            return ["", ""];
         }
 
         return $authorizationParts;
     }
 
+    /**
+     * @throws Exception
+     */
     protected function getAuthorizationFromHeader(): string
     {
-        if (!isset($_SERVER['HTTP_AUTHORIZATION'])) {
-            $this->errorResponse(
-                Exception::noAuthorizationHeader()
-            );
+        /** @var string[] $_SERVER */
+        $authorization = $_SERVER['HTTP_AUTHORIZATION'] ?? null;
+
+        if ($authorization === null) {
+            throw Exception::noAuthorizationHeader();
         }
 
-        return $_SERVER['HTTP_AUTHORIZATION'];
+        return $authorization;
     }
 
     protected function successResponse(array $data = []): array

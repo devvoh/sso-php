@@ -12,6 +12,8 @@ interface ProviderInterface
 
     public function validateToken(string $username, string $token): bool;
 
+    public function registerUser(string $username, string $password, array $context): bool;
+
     public function validateLogin(string $username, string $password): bool;
 
     public function revokeToken(string $username, string $token): bool;

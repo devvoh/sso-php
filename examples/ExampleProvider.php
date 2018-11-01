@@ -13,18 +13,20 @@ class ExampleProvider implements ProviderInterface
     /** @var string */
     protected $tokenStorageFile = __DIR__ . "/token_storage.json";
 
+    /** @var string */
+    protected $userStorageFile = __DIR__ . "/user_storage.json";
+
     /** @var array */
     protected $tokenStorage = [];
+
+    /** @var array */
+    protected $userStorage = [];
 
     /** @var string */
     protected $accountEndpoint = "https://x.com/";
 
     public function __construct()
     {
-        if (!file_exists($this->tokenStorageFile)) {
-            @touch($this->tokenStorageFile);
-        }
-
         $this->loadStorage();
     }
 
@@ -56,8 +58,27 @@ class ExampleProvider implements ProviderInterface
         return true;
     }
 
+    public function registerUser(string $username, string $password, array $context): bool
+    {
+        $this->userStorage[$username] = [
+            'password' => $password,
+            'context' => $context,
+        ];
+
+        $this->saveStorage();
+
+        return true;
+    }
+
     public function validateLogin(string $username, string $password): bool
     {
+        $user = $this->userStorage[$username] ?? null;
+
+        if ($user && $user['password'] === $password) {
+            return true;
+        }
+
+        // we have a default login for example purposes
         if ($username !== 'user' || $password !== 'pass') {
             return false;
         }
@@ -67,15 +88,9 @@ class ExampleProvider implements ProviderInterface
 
     public function validateToken(string $username, string $token): bool
     {
-        if (!isset($this->tokenStorage[$username])) {
-            return false;
-        }
+        $tokenFromStorage = $this->tokenStorage[$username] ?? null;
 
-        if ($this->tokenStorage[$username] !== $token) {
-            return false;
-        }
-
-        return true;
+        return $tokenFromStorage == $token;
     }
 
     public function revokeToken(string $username, string $token): bool
@@ -126,21 +141,32 @@ class ExampleProvider implements ProviderInterface
         // It's possible to generate metadata for specific contexts here
         switch ($context) {
             case "login":
+            case "logout":
             case "validateToken":
-                return ["username" => $data["username"]];
+            case "register":
+                return [
+                    "username" => $data["username"],
+                    "context" => $this->userStorage[$data["username"]]['context'] ?? [],
+                ];
         }
         return [];
     }
 
     protected function loadStorage(): void
     {
-        $storage = file_get_contents($this->tokenStorageFile);
-        $this->tokenStorage = json_decode($storage, true);
+        $tokenStorage = @file_get_contents($this->tokenStorageFile);
+        $this->tokenStorage = json_decode($tokenStorage, true) ?? [];
+
+        $userStorage = @file_get_contents($this->userStorageFile);
+        $this->userStorage = json_decode($userStorage, true) ?? [];
     }
 
     protected function saveStorage(): void
     {
-        $storage = json_encode($this->tokenStorage);
-        file_put_contents($this->tokenStorageFile, $storage);
+        $tokenStorage = json_encode($this->tokenStorage);
+        file_put_contents($this->tokenStorageFile, $tokenStorage);
+
+        $userStorage = json_encode($this->userStorage);
+        file_put_contents($this->userStorageFile, $userStorage);
     }
 }

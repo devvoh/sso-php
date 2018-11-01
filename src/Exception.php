@@ -5,13 +5,14 @@ namespace SsoPhp;
 class Exception extends \Exception
 {
     const CLIENT_CREDENTIALS_INVALID = 10;
-    const LOGIN_FAILED = 20;
-    const TOKEN_VALIDATION_FAILED = 30;
-    const NO_AUTHORIZATION_HEADER = 40;
-    const INVALID_AUTHORIZATION_HEADER = 50;
-    const LOGIN_URL_GENERATION_FAILED = 60;
-    const REGISTER_URL_GENERATION_FAILED = 70;
-    const TOKEN_REVOCATION_FAILED = 80;
+    const REGISTER_FAILED = 20;
+    const LOGIN_FAILED = 30;
+    const TOKEN_VALIDATION_FAILED = 40;
+    const NO_AUTHORIZATION_HEADER = 50;
+    const INVALID_AUTHORIZATION_HEADER = 60;
+    const LOGIN_URL_GENERATION_FAILED = 70;
+    const REGISTER_URL_GENERATION_FAILED = 80;
+    const TOKEN_REVOCATION_FAILED = 90;
 
     /**
      * @return self
@@ -19,6 +20,14 @@ class Exception extends \Exception
     public static function clientCredentialsInvalid(): self
     {
         return new self("Client credentials invalid", self::CLIENT_CREDENTIALS_INVALID);
+    }
+
+    /**
+     * @return self
+     */
+    public static function registerFailed(): self
+    {
+        return new self("Register failed", self::REGISTER_FAILED);
     }
 
     /**
