@@ -89,7 +89,7 @@ class Server
 
     public function login(): array
     {
-        [$username, $password] = $this->parseAuthorization();
+        [$username, $password] = $this->getAuthorization();
 
         if (!$this->provider->validateLogin($username, $password)) {
             return $this->errorResponseFromException(
@@ -115,7 +115,7 @@ class Server
 
     public function validateToken(): array
     {
-        [$username, $token] = $this->parseAuthorization();
+        [$username, $token] = $this->getAuthorization();
 
         if (!$this->provider->validateToken($username, $token)) {
             return $this->errorResponseFromException(
@@ -138,7 +138,7 @@ class Server
 
     public function logout(): array
     {
-        [$username, $token] = $this->parseAuthorization();
+        [$username, $token] = $this->getAuthorization();
 
         if (!$this->provider->revokeToken($username, $token)) {
             return $this->errorResponseFromException(
@@ -207,31 +207,31 @@ class Server
 
     protected function parseAuthorization(string $authorization = null): array
     {
-        if ($authorization === null) {
-            try {
-                $authorization = $this->getAuthorizationFromHeader();
-            } catch (Exception $e) {
-                return ["", ""];
-            }
-        }
-
         if (mb_stripos($authorization, "Basic ") !== false) {
-            $authorization = str_ireplace("Basic ", "", $authorization);
+            $authorization = str_ireplace("Basic ", '', $authorization);
         } elseif (stripos($authorization, "Bearer ") !== false) {
-            $authorization = str_ireplace("Bearer ", "", $authorization);
+            $authorization = str_ireplace("Bearer ", '', $authorization);
         }
 
         $authorizationDecoded = base64_decode($authorization);
         if (mb_strlen($authorizationDecoded) !== mb_strlen($authorizationDecoded)) {
-            return ["", ""];
+            return ['', ''];
         }
 
         $authorizationParts = explode(":", $authorizationDecoded);
         if (count($authorizationParts) !== 2) {
-            return ["", ""];
+            return ['', ''];
         }
 
         return $authorizationParts;
+    }
+
+    protected function getAuthorization(): array
+    {
+        $username = $_SERVER['PHP_AUTH_USER'] ?? '';
+        $password = $_SERVER['PHP_AUTH_PW'] ?? '';
+
+        return [$username, $password];
     }
 
     /**

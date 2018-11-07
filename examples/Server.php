@@ -5,9 +5,11 @@ use SsoPhp\Server;
 require __DIR__ . '/../vendor/autoload.php';
 require __DIR__ . '/ExampleProvider.php';
 
+$headers = getallheaders();
+
 $server = new Server(
-    'secret',
-    'client-token-goes-here',
+    $headers['client_secret'],
+    $headers['client_token'],
     new ExampleProvider()
 );
 
