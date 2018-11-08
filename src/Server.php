@@ -21,6 +21,11 @@ class Server
      */
     protected $provider;
 
+    /**
+     * @var string[]
+     */
+    protected $headers = [];
+
     public function __construct(
         string $clientSecret,
         string $clientToken,
@@ -29,6 +34,8 @@ class Server
         $this->clientSecret = $clientSecret;
         $this->clientToken = $clientToken;
         $this->provider = $provider;
+
+        $this->headers = getallheaders();
 
         $this->provider->setClientSecret($clientSecret);
         $this->provider->setClientToken($clientToken);
@@ -43,15 +50,15 @@ class Server
         }
 
         $metadata = $this->provider->getMetadataForContext(
-            "connect",
+            'connect',
             [
-                "clientSecret" => $this->clientSecret,
-                "clientToken" => $this->clientToken,
+                'clientSecret' => $this->clientSecret,
+                'clientToken' => $this->clientToken,
             ]
         );
 
         return $this->successResponse([
-            "metadata" => $metadata,
+            'metadata' => $metadata,
         ]);
     }
 
@@ -76,20 +83,20 @@ class Server
         }
 
         $metadata = $this->provider->getMetadataForContext(
-            "login",
+            'login',
             [
-                "username" => $username
+                'username' => $username
             ]
         );
 
         return $this->successResponse([
-            "metadata" => $metadata,
+            'metadata' => $metadata,
         ]);
     }
 
     public function login(): array
     {
-        [$username, $password] = $this->getAuthorization();
+        [$username, $password] = $this->parseAuthorization();
 
         if (!$this->provider->validateLogin($username, $password)) {
             return $this->errorResponseFromException(
@@ -100,22 +107,22 @@ class Server
         $token = $this->provider->generateToken($username);
 
         $metadata = $this->provider->getMetadataForContext(
-            "login",
+            'login',
             [
-                "username" => $username,
-                "token" => $token
+                'username' => $username,
+                'token' => $token
             ]
         );
 
         return $this->successResponse([
-            "token" => $token,
-            "metadata" => $metadata,
+            'token' => $token,
+            'metadata' => $metadata,
         ]);
     }
 
     public function validateToken(): array
     {
-        [$username, $token] = $this->getAuthorization();
+        [$username, $token] = $this->parseAuthorization();
 
         if (!$this->provider->validateToken($username, $token)) {
             return $this->errorResponseFromException(
@@ -124,21 +131,21 @@ class Server
         }
 
         $metadata = $this->provider->getMetadataForContext(
-            "validateToken",
+            'validateToken',
             [
-                "username" => $username,
-                "token" => $token
+                'username' => $username,
+                'token' => $token
             ]
         );
 
         return $this->successResponse([
-            "metadata" => $metadata
+            'metadata' => $metadata
         ]);
     }
 
     public function logout(): array
     {
-        [$username, $token] = $this->getAuthorization();
+        [$username, $token] = $this->parseAuthorization();
 
         if (!$this->provider->revokeToken($username, $token)) {
             return $this->errorResponseFromException(
@@ -147,15 +154,15 @@ class Server
         }
 
         $metadata = $this->provider->getMetadataForContext(
-            "logout",
+            'logout',
             [
-                "username" => $username,
-                "token" => $token
+                'username' => $username,
+                'token' => $token
             ]
         );
 
         return $this->successResponse([
-            "metadata" => $metadata,
+            'metadata' => $metadata,
         ]);
     }
 
@@ -170,15 +177,15 @@ class Server
         }
 
         $metadata = $this->provider->getMetadataForContext(
-            "generateRegisterUrl",
+            'generateRegisterUrl',
             [
-                "url" => $url
+                'url' => $url
             ]
         );
 
         return $this->successResponse([
-            "url" => $url,
-            "metadata" => $metadata,
+            'url' => $url,
+            'metadata' => $metadata,
         ]);
     }
 
@@ -193,32 +200,37 @@ class Server
         }
 
         $metadata = $this->provider->getMetadataForContext(
-            "generateLoginUrl",
+            'generateLoginUrl',
             [
-                "url" => $url
+                'url' => $url
             ]
         );
 
         return $this->successResponse([
-            "url" => $url,
-            "metadata" => $metadata,
+            'url' => $url,
+            'metadata' => $metadata,
         ]);
     }
 
     protected function parseAuthorization(string $authorization = null): array
     {
-        if (mb_stripos($authorization, "Basic ") !== false) {
-            $authorization = str_ireplace("Basic ", '', $authorization);
-        } elseif (stripos($authorization, "Bearer ") !== false) {
-            $authorization = str_ireplace("Bearer ", '', $authorization);
+        if ($authorization === null) {
+            try {
+                $authorization = $this->getAuthorizationFromHeader();
+            } catch (Exception $e) {
+                return ['', ''];
+            }
+        }
+
+        if (mb_stripos($authorization, 'Basic ') !== false) {
+            $authorization = str_ireplace('Basic ', '', $authorization);
+        } elseif (stripos($authorization, 'Bearer ') !== false) {
+            $authorization = str_ireplace('Bearer ', '', $authorization);
         }
 
         $authorizationDecoded = base64_decode($authorization);
-        if (mb_strlen($authorizationDecoded) !== mb_strlen($authorizationDecoded)) {
-            return ['', ''];
-        }
 
-        $authorizationParts = explode(":", $authorizationDecoded);
+        $authorizationParts = explode(':', $authorizationDecoded);
         if (count($authorizationParts) !== 2) {
             return ['', ''];
         }
@@ -226,21 +238,12 @@ class Server
         return $authorizationParts;
     }
 
-    protected function getAuthorization(): array
-    {
-        $username = $_SERVER['PHP_AUTH_USER'] ?? '';
-        $password = $_SERVER['PHP_AUTH_PW'] ?? '';
-
-        return [$username, $password];
-    }
-
     /**
      * @throws Exception
      */
     protected function getAuthorizationFromHeader(): string
     {
-        /** @var string[] $_SERVER */
-        $authorization = $_SERVER['HTTP_AUTHORIZATION'] ?? null;
+        $authorization = $this->headers['Authorization'] ?? null;
 
         if ($authorization === null) {
             throw Exception::noAuthorizationHeader();
@@ -252,20 +255,20 @@ class Server
     protected function successResponse(array $data = []): array
     {
         return [
-            "status" => "success",
-            "data" => $data,
+            'status' => 'success',
+            'data' => $data,
         ];
     }
 
     protected function errorResponse(string $message, int $code = null): array
     {
         $response = [
-            "status" => "error",
-            "message" => $message,
+            'status' => 'error',
+            'message' => $message,
         ];
 
         if ($code !== null) {
-            $response["code"] = $code;
+            $response['code'] = $code;
         }
 
         return $response;
