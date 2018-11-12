@@ -20,9 +20,5 @@ interface ProviderInterface
 
     public function generateToken(string $username): string;
 
-    public function generateRegisterUrl(): string;
-
-    public function generateLoginUrl(): string;
-
     public function getMetadataForContext(string $context, array $data): array;
 }
