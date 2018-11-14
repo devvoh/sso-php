@@ -2,6 +2,7 @@
 
 namespace SsoPhp;
 
+use SsoPhp\Provider\ContextualProviderInterface;
 use SsoPhp\Provider\ExternalProviderInterface;
 use SsoPhp\Provider\ProviderInterface;
 
@@ -78,9 +79,7 @@ class Server
 
         [$username, $password] = $this->parseAuthorization($authorization);
 
-        $context = $_POST['context'] ?? [];
-
-        if (!$this->provider->registerUser($username, $password, $context)) {
+        if (!$this->provider->registerUser($username, $password)) {
             return $this->errorResponseFromException(
                 Exception::registerFailed()
             );
@@ -96,6 +95,7 @@ class Server
         return $this->successResponse(
             'register',
             [
+                'username' => $username,
                 'metadata' => $metadata,
             ]
         );
@@ -123,40 +123,8 @@ class Server
         return $this->successResponse(
             'login',
             [
+                'username' => $username,
                 'token' => $token,
-                'metadata' => $metadata,
-            ]
-        );
-    }
-
-    public function updateContext(): SsoResponse
-    {
-        [$username, $token] = $this->parseAuthorization($authorization);
-
-        $context = $_POST['context'] ?? [];
-
-        if (!$this->provider->validateToken($username, $token)) {
-            return $this->errorResponseFromException(
-                Exception::updateContextFailed()
-            );
-        }
-
-        if (!$this->provider->updateContext($username, $context)) {
-            return $this->errorResponseFromException(
-                Exception::updateContextFailed()
-            );
-        }
-
-        $metadata = $this->provider->getMetadataForCall(
-            'updateContext',
-            [
-                'username' => $username
-            ]
-        );
-
-        return $this->successResponse(
-            'updateContext',
-            [
                 'metadata' => $metadata,
             ]
         );
@@ -182,6 +150,7 @@ class Server
         return $this->successResponse(
             'validateToken',
             [
+                'username' => $username,
                 'token' => $token,
                 'metadata' => $metadata
             ]
@@ -208,6 +177,7 @@ class Server
         return $this->successResponse(
             'logout',
             [
+                'username' => $username,
                 'metadata' => $metadata,
             ]
         );
@@ -272,6 +242,89 @@ class Server
             'generateRegisterUrl',
             [
                 'url' => $url,
+                'metadata' => $metadata,
+            ]
+        );
+    }
+
+    public function registerWithContext(): SsoResponse
+    {
+        if (!($this->provider instanceof ContextualProviderInterface)) {
+            return $this->errorResponseFromException(
+                Exception::registerWithContextNotSupported()
+            );
+        }
+
+        $response = $this->register();
+
+        if ($response->isError()) {
+            return $this->errorResponseFromException(
+                Exception::registerWithContextFailed()
+            );
+        }
+
+        $username = $response->getFromData('username');
+        $context = $_POST['context'] ?? [];
+
+        if (!$this->provider->updateContext($username, $context)) {
+            return $this->errorResponseFromException(
+                Exception::updateContextFailed()
+            );
+        }
+
+        $metadata = $this->provider->getMetadataForCall(
+            'registerWithContext',
+            [
+                'username' => $username
+            ]
+        );
+
+        return $this->successResponse(
+            'registerWithContext',
+            [
+                'username' => $username,
+                'context' => $context,
+                'metadata' => $metadata,
+            ]
+        );
+    }
+
+    public function updateContext(): SsoResponse
+    {
+        if (!($this->provider instanceof ContextualProviderInterface)) {
+            return $this->errorResponseFromException(
+                Exception::updateContextNotSupported()
+            );
+        }
+
+        [$username, $token] = $this->parseAuthorization();
+
+        $context = $_POST['context'] ?? [];
+
+        if (!$this->provider->validateToken($username, $token)) {
+            return $this->errorResponseFromException(
+                Exception::updateContextFailed()
+            );
+        }
+
+        if (!$this->provider->updateContext($username, $context)) {
+            return $this->errorResponseFromException(
+                Exception::updateContextFailed()
+            );
+        }
+
+        $metadata = $this->provider->getMetadataForCall(
+            'updateContext',
+            [
+                'username' => $username
+            ]
+        );
+
+        return $this->successResponse(
+            'updateContext',
+            [
+                'username' => $username,
+                'context' => $context,
                 'metadata' => $metadata,
             ]
         );

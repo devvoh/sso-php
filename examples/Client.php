@@ -50,7 +50,15 @@ if (strtolower($register) === 'y') {
     write("New password: ");
     $pass = trim(fgets(STDIN));
 
-    $response = $client->register($user, $pass, ['example' => 1]);
+    write("Register new user with context? [y/N] ");
+    $registerWithContext = trim(fgets(STDIN));
+
+    if (strtolower($registerWithContext) === 'y') {
+        $response = $client->registerWithContext($user, $pass, ['example' => 1]);
+    } else {
+        $response = $client->register($user, $pass);
+    }
+
 
     if ($verbose) {
         writeln($response->toJson());

@@ -1,8 +1,9 @@
 <?php
 
+use SsoPhp\Provider\ContextualProviderInterface;
 use SsoPhp\Provider\ProviderInterface;
 
-class ExampleProvider implements ProviderInterface
+class ExampleProvider implements ProviderInterface, ContextualProviderInterface
 {
     /** @var string */
     protected $clientSecret;
@@ -58,14 +59,21 @@ class ExampleProvider implements ProviderInterface
         return true;
     }
 
-    public function registerUser(string $username, string $password, array $context): bool
+    public function registerUser(string $username, string $password): bool
+    {
+        $this->userStorage[$username] = [
+            'password' => $password,
+        ];
+
+        return true;
+    }
+
+    public function registerUserWithContext(string $username, string $password, array $context): bool
     {
         $this->userStorage[$username] = [
             'password' => $password,
             'context' => $context,
         ];
-
-        $this->saveStorage();
 
         return true;
     }

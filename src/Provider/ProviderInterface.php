@@ -10,11 +10,9 @@ interface ProviderInterface
 
     public function validateCredentials(): bool;
 
-    public function registerUser(string $username, string $password, array $context): bool;
+    public function registerUser(string $username, string $password): bool;
 
     public function loginUser(string $username, string $password): bool;
-
-    public function updateContext(string $username, array $context): bool;
 
     public function validateToken(string $username, string $token): bool;
 

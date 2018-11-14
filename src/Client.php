@@ -56,13 +56,12 @@ class Client
         return $this->makeRequest("GET", "connect");
     }
 
-    public function register(string $username, string $password, array $context = []): SsoResponse
+    public function register(string $username, string $password): SsoResponse
     {
         $authorization = $this->buildAuthorization($username, $password);
 
         $response = $this->makeRequest("POST", "register", [], [
             'authorization' => $authorization,
-            'context' => $context,
         ]);
 
         return $response;
@@ -74,6 +73,18 @@ class Client
 
         $response = $this->makeRequest("GET", "login", [
             "Authorization" => "Basic {$authorization}",
+        ]);
+
+        return $response;
+    }
+
+    public function registerWithContext(string $username, string $password, array $context = []): SsoResponse
+    {
+        $authorization = $this->buildAuthorization($username, $password);
+
+        $response = $this->makeRequest("POST", "registerWithContext", [], [
+            'authorization' => $authorization,
+            'context' => $context,
         ]);
 
         return $response;

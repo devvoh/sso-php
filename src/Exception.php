@@ -18,6 +18,9 @@ class Exception extends \Exception
     public const REGISTER_URL_GENERATION_NOT_SUPPORTED = 100;
     public const TOKEN_REVOCATION_FAILED = 110;
     public const UPDATE_CONTEXT_FAILED = 120;
+    public const UPDATE_CONTEXT_NOT_SUPPORTED = 130;
+    public const REGISTER_WITH_CONTEXT_FAILED = 140;
+    public const REGISTER_WITH_CONTEXT_NOT_SUPPORTED = 150;
 
     /**
      * @var string|null
@@ -130,5 +133,29 @@ class Exception extends \Exception
     public static function updateContextFailed(): self
     {
         return new self('updateContext', 'Update context failed', self::UPDATE_CONTEXT_FAILED);
+    }
+
+    /**
+     * @return self
+     */
+    public static function updateContextNotSupported(): self
+    {
+        return new self('updateContext', 'Update context not supported by provider', self::UPDATE_CONTEXT_NOT_SUPPORTED);
+    }
+
+    /**
+     * @return self
+     */
+    public static function registerWithContextFailed(): self
+    {
+        return new self('registerWithContext', 'Register with context failed', self::REGISTER_WITH_CONTEXT_FAILED);
+    }
+
+    /**
+     * @return self
+     */
+    public static function registerWithContextNotSupported(): self
+    {
+        return new self('registerWithContext', 'Register with context not supported by provider', self::REGISTER_WITH_CONTEXT__NOT_SUPPORTED);
     }
 }
