@@ -1,6 +1,6 @@
 <?php
 
-use SsoPhp\Server\ProviderInterface;
+use SsoPhp\Provider\ProviderInterface;
 
 class ExampleProvider implements ProviderInterface
 {
@@ -70,7 +70,7 @@ class ExampleProvider implements ProviderInterface
         return true;
     }
 
-    public function validateLogin(string $username, string $password): bool
+    public function loginUser(string $username, string $password): bool
     {
         $user = $this->userStorage[$username] ?? null;
 
@@ -82,6 +82,13 @@ class ExampleProvider implements ProviderInterface
         if ($username !== 'user' || $password !== 'pass') {
             return false;
         }
+
+        return true;
+    }
+
+    public function updateContext(string $username, array $context): bool
+    {
+        $this->userStorage[$username]['context'] = $context;
 
         return true;
     }
@@ -136,14 +143,15 @@ class ExampleProvider implements ProviderInterface
         );
     }
 
-    public function getMetadataForContext(string $context, array $data): array
+    public function getMetadataForCall(string $call, array $data): array
     {
         // It's possible to generate metadata for specific contexts here
-        switch ($context) {
+        switch ($call) {
             case "login":
             case "logout":
             case "validateToken":
             case "register":
+            case "updateContext":
                 return [
                     "username" => $data["username"],
                     "context" => $this->userStorage[$data["username"]]['context'] ?? [],

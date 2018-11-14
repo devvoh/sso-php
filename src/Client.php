@@ -2,8 +2,6 @@
 
 namespace SsoPhp;
 
-use SsoPhp\Client\ClientResponse;
-
 class Client
 {
     /**
@@ -53,12 +51,12 @@ class Client
         return $this->serverUrl;
     }
 
-    public function connect(): ClientResponse
+    public function connect(): SsoResponse
     {
         return $this->makeRequest("GET", "connect");
     }
 
-    public function register(string $username, string $password, array $context = []): ClientResponse
+    public function register(string $username, string $password, array $context = []): SsoResponse
     {
         $authorization = $this->buildAuthorization($username, $password);
 
@@ -70,7 +68,7 @@ class Client
         return $response;
     }
 
-    public function login(string $username, string $password): ClientResponse
+    public function login(string $username, string $password): SsoResponse
     {
         $authorization = $this->buildAuthorization($username, $password);
 
@@ -81,7 +79,25 @@ class Client
         return $response;
     }
 
-    public function validateToken(string $username, string $token): ClientResponse
+    public function updateContext(string $username, string $token, array $context): SsoResponse
+    {
+        $authorization = $this->buildAuthorization($username, $token);
+
+        $response = $this->makeRequest(
+            "POST",
+            "updateContext",
+            [
+                "Authorization" => "Basic {$authorization}",
+            ],
+            [
+                'context' => $context,
+            ]
+        );
+
+        return $response;
+    }
+
+    public function validateToken(string $username, string $token): SsoResponse
     {
         $authorization = $this->buildAuthorization($username, $token);
 
@@ -92,7 +108,7 @@ class Client
         return $response;
     }
 
-    public function logout(string $username, string $token): ClientResponse
+    public function logout(string $username, string $token): SsoResponse
     {
         $authorization = $this->buildAuthorization($username, $token);
 
@@ -103,14 +119,14 @@ class Client
         return $response;
     }
 
-    public function generateRegisterUrl(): ClientResponse
+    public function generateRegisterUrl(): SsoResponse
     {
         $response = $this->makeRequest("GET", "generateRegisterUrl");
 
         return $response;
     }
 
-    public function generateLoginUrl(): ClientResponse
+    public function generateLoginUrl(): SsoResponse
     {
         $response = $this->makeRequest("GET", "generateLoginUrl");
 
@@ -131,7 +147,7 @@ class Client
         string $call,
         array $headers = [],
         array $postValues = []
-    ): ClientResponse {
+    ): SsoResponse {
         $url = $this->serverUrl . ltrim($call, "/");
 
         $curl = curl_init();
@@ -164,14 +180,14 @@ class Client
         curl_close($curl);
 
         if ($jsonResponse === false) {
-            return new ClientResponse([
-                'status' => 'error',
-                'data' => [
+            return new SsoResponse(
+                $call,
+                StatusTypes::STATUS_ERROR,
+                [
                     'message' => 'Could not connect',
                     'code' => 0,
-                ],
-                'call' => $call,
-            ]);
+                ]
+            );
         }
 
         $response = json_decode($jsonResponse, true);
@@ -179,17 +195,17 @@ class Client
         if (json_last_error() === JSON_ERROR_NONE && is_array($response)) {
             $response['call'] = $call;
         } else {
-            $response = [
-                'status' => 'error',
-                'data' => [
+            return new SsoResponse(
+                $call,
+                StatusTypes::STATUS_ERROR,
+                [
                     'message' => 'Response was not valid',
                     'code' => 0,
                     'response' => $jsonResponse,
-                ],
-                'call' => $call,
-            ];
+                ]
+            );
         }
 
-        return new ClientResponse($response);
+        return SsoResponse::createFromArray($response);
     }
 }

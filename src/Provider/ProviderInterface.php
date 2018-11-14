@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace SsoPhp\Server;
+namespace SsoPhp\Provider;
 
 interface ProviderInterface
 {
@@ -10,15 +10,17 @@ interface ProviderInterface
 
     public function validateCredentials(): bool;
 
-    public function validateToken(string $username, string $token): bool;
-
     public function registerUser(string $username, string $password, array $context): bool;
 
-    public function validateLogin(string $username, string $password): bool;
+    public function loginUser(string $username, string $password): bool;
+
+    public function updateContext(string $username, array $context): bool;
+
+    public function validateToken(string $username, string $token): bool;
 
     public function revokeToken(string $username, string $token): bool;
 
     public function generateToken(string $username): string;
 
-    public function getMetadataForContext(string $context, array $data): array;
+    public function getMetadataForCall(string $call, array $data): array;
 }

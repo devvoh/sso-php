@@ -2,7 +2,8 @@
 
 namespace SsoPhp;
 
-use SsoPhp\Server\ProviderInterface;
+use SsoPhp\Provider\ExternalProviderInterface;
+use SsoPhp\Provider\ProviderInterface;
 
 class Server
 {
@@ -17,7 +18,7 @@ class Server
     protected $clientToken;
 
     /**
-     * @var ProviderInterface
+     * @var ProviderInterface|ExternalProviderInterface
      */
     protected $provider;
 
@@ -41,7 +42,7 @@ class Server
         $this->provider->setClientToken($clientToken);
     }
 
-    public function connect(): array
+    public function connect(): SsoResponse
     {
         if (!$this->provider->validateCredentials()) {
             return $this->errorResponseFromException(
@@ -49,7 +50,7 @@ class Server
             );
         }
 
-        $metadata = $this->provider->getMetadataForContext(
+        $metadata = $this->provider->getMetadataForCall(
             'connect',
             [
                 'clientSecret' => $this->clientSecret,
@@ -57,12 +58,15 @@ class Server
             ]
         );
 
-        return $this->successResponse([
-            'metadata' => $metadata,
-        ]);
+        return $this->successResponse(
+            'connect',
+            [
+                'metadata' => $metadata,
+            ]
+        );
     }
 
-    public function register(): array
+    public function register(): SsoResponse
     {
         $authorization = $_POST['authorization'] ?? null;
 
@@ -82,23 +86,26 @@ class Server
             );
         }
 
-        $metadata = $this->provider->getMetadataForContext(
-            'login',
+        $metadata = $this->provider->getMetadataForCall(
+            'register',
             [
                 'username' => $username
             ]
         );
 
-        return $this->successResponse([
-            'metadata' => $metadata,
-        ]);
+        return $this->successResponse(
+            'register',
+            [
+                'metadata' => $metadata,
+            ]
+        );
     }
 
-    public function login(): array
+    public function login(): SsoResponse
     {
         [$username, $password] = $this->parseAuthorization();
 
-        if (!$this->provider->validateLogin($username, $password)) {
+        if (!$this->provider->loginUser($username, $password)) {
             return $this->errorResponseFromException(
                 Exception::loginFailed()
             );
@@ -106,21 +113,56 @@ class Server
 
         $token = $this->provider->generateToken($username);
 
-        $metadata = $this->provider->getMetadataForContext(
+        $metadata = $this->provider->getMetadataForCall(
             'login',
             [
-                'token' => $token,
                 'username' => $username,
             ]
         );
 
-        return $this->successResponse([
-            'token' => $token,
-            'metadata' => $metadata,
-        ]);
+        return $this->successResponse(
+            'login',
+            [
+                'token' => $token,
+                'metadata' => $metadata,
+            ]
+        );
     }
 
-    public function validateToken(): array
+    public function updateContext(): SsoResponse
+    {
+        [$username, $token] = $this->parseAuthorization($authorization);
+
+        $context = $_POST['context'] ?? [];
+
+        if (!$this->provider->validateToken($username, $token)) {
+            return $this->errorResponseFromException(
+                Exception::updateContextFailed()
+            );
+        }
+
+        if (!$this->provider->updateContext($username, $context)) {
+            return $this->errorResponseFromException(
+                Exception::updateContextFailed()
+            );
+        }
+
+        $metadata = $this->provider->getMetadataForCall(
+            'updateContext',
+            [
+                'username' => $username
+            ]
+        );
+
+        return $this->successResponse(
+            'updateContext',
+            [
+                'metadata' => $metadata,
+            ]
+        );
+    }
+
+    public function validateToken(): SsoResponse
     {
         [$username, $token] = $this->parseAuthorization();
 
@@ -130,21 +172,23 @@ class Server
             );
         }
 
-        $metadata = $this->provider->getMetadataForContext(
+        $metadata = $this->provider->getMetadataForCall(
             'validateToken',
             [
-                'token' => $token,
                 'username' => $username,
             ]
         );
 
-        return $this->successResponse([
-            'token' => $token,
-            'metadata' => $metadata
-        ]);
+        return $this->successResponse(
+            'validateToken',
+            [
+                'token' => $token,
+                'metadata' => $metadata
+            ]
+        );
     }
 
-    public function logout(): array
+    public function logout(): SsoResponse
     {
         [$username, $token] = $this->parseAuthorization();
 
@@ -154,44 +198,29 @@ class Server
             );
         }
 
-        $metadata = $this->provider->getMetadataForContext(
+        $metadata = $this->provider->getMetadataForCall(
             'logout',
             [
-                'token' => $token,
                 'username' => $username,
             ]
         );
 
-        return $this->successResponse([
-            'metadata' => $metadata,
-        ]);
+        return $this->successResponse(
+            'logout',
+            [
+                'metadata' => $metadata,
+            ]
+        );
     }
 
-    public function generateRegisterUrl(): array
+    public function generateLoginUrl(): SsoResponse
     {
-        $url = $this->provider->generateRegisterUrl();
-
-        if (!$url) {
+        if (!($this->provider instanceof ExternalProviderInterface)) {
             return $this->errorResponseFromException(
-                Exception::registerUrlGenerationFailed()
+                Exception::loginUrlGenerationNotSupported()
             );
         }
 
-        $metadata = $this->provider->getMetadataForContext(
-            'generateRegisterUrl',
-            [
-                'url' => $url
-            ]
-        );
-
-        return $this->successResponse([
-            'url' => $url,
-            'metadata' => $metadata,
-        ]);
-    }
-
-    public function generateLoginUrl(): array
-    {
         $url = $this->provider->generateLoginUrl();
 
         if (!$url) {
@@ -200,17 +229,52 @@ class Server
             );
         }
 
-        $metadata = $this->provider->getMetadataForContext(
+        $metadata = $this->provider->getMetadataForCall(
             'generateLoginUrl',
             [
                 'url' => $url
             ]
         );
 
-        return $this->successResponse([
-            'url' => $url,
-            'metadata' => $metadata,
-        ]);
+        return $this->successResponse(
+            'generateLoginUrl',
+            [
+                'url' => $url,
+                'metadata' => $metadata,
+            ]
+        );
+    }
+
+    public function generateRegisterUrl(): SsoResponse
+    {
+        if (!($this->provider instanceof ExternalProviderInterface)) {
+            return $this->errorResponseFromException(
+                Exception::registerUrlGenerationNotSupported()
+            );
+        }
+
+        $url = $this->provider->generateRegisterUrl();
+
+        if (!$url) {
+            return $this->errorResponseFromException(
+                Exception::registerUrlGenerationFailed()
+            );
+        }
+
+        $metadata = $this->provider->getMetadataForCall(
+            'generateRegisterUrl',
+            [
+                'url' => $url
+            ]
+        );
+
+        return $this->successResponse(
+            'generateRegisterUrl',
+            [
+                'url' => $url,
+                'metadata' => $metadata,
+            ]
+        );
     }
 
     protected function parseAuthorization(string $authorization = null): array
@@ -253,33 +317,40 @@ class Server
         return $authorization;
     }
 
-    protected function successResponse(array $data = []): array
+    protected function successResponse(string $call, array $data = []): SsoResponse
     {
-        return [
-            'status' => 'success',
-            'data' => $data,
-        ];
+        return new SsoResponse(
+            $call,
+            StatusTypes::STATUS_SUCCESS,
+            $data
+        );
     }
 
-    protected function errorResponse(string $message, int $code = null): array
+    protected function errorResponse(string $call, string $message, int $code = null): SsoResponse
     {
-        $response = [
-            'status' => 'error',
-            'data' => [
-                'message' => $message,
-            ]
+        $data = [
+            'message' => $message,
         ];
 
         if ($code !== null) {
-            $response['data']['code'] = $code;
+            $data['code'] = $code;
         }
 
-        return $response;
+        return new SsoResponse(
+            $call,
+            StatusTypes::STATUS_ERROR,
+            $data
+        );
     }
 
-    protected function errorResponseFromException(\Exception $exception): array
+    protected function errorResponseFromException(\Exception $exception): SsoResponse
     {
+        if ($exception instanceof Exception) {
+            $call = $exception->getCall();
+        }
+
         return $this->errorResponse(
+            $call ?? 'none',
             $exception->getMessage(),
             $exception->getCode()
         );

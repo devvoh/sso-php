@@ -24,19 +24,22 @@ if ($action === null) {
 
 switch ($action) {
     case 'connect':
-        echo json_encode($server->connect());
+        echo $server->connect()->toJson();
         return;
     case 'register':
-        echo json_encode($server->register());
+        echo $server->register()->toJson();
         return;
     case 'login':
-        echo json_encode($server->login());
+        echo $server->login()->toJson();
         return;
     case 'validateToken':
-        echo json_encode($server->validateToken());
+        echo $server->validateToken()->toJson();
         return;
     case 'logout':
-        echo json_encode($server->logout());
+        echo $server->logout()->toJson();
+        return;
+    case 'updateContext':
+        echo $server->updateContext()->toJson();
         return;
 }
 
