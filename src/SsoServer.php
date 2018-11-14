@@ -6,7 +6,7 @@ use SsoPhp\Provider\ContextualProviderInterface;
 use SsoPhp\Provider\ExternalProviderInterface;
 use SsoPhp\Provider\ProviderInterface;
 
-class Server
+class SsoServer
 {
     /**
      * @var string
@@ -374,7 +374,7 @@ class Server
     {
         return new SsoResponse(
             $call,
-            StatusTypes::STATUS_SUCCESS,
+            ResponseStatusTypes::STATUS_SUCCESS,
             $data
         );
     }
@@ -391,7 +391,7 @@ class Server
 
         return new SsoResponse(
             $call,
-            StatusTypes::STATUS_ERROR,
+            ResponseStatusTypes::STATUS_ERROR,
             $data
         );
     }

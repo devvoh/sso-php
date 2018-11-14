@@ -2,7 +2,7 @@
 
 namespace SsoPhp;
 
-class StatusTypes
+class ResponseStatusTypes
 {
     public const STATUS_SUCCESS = 'success';
     public const STATUS_ERROR = 'error';

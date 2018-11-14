@@ -2,7 +2,7 @@
 
 namespace SsoPhp;
 
-class Client
+class SsoClient
 {
     /**
      * @var string
@@ -193,7 +193,7 @@ class Client
         if ($jsonResponse === false) {
             return new SsoResponse(
                 $call,
-                StatusTypes::STATUS_ERROR,
+                ResponseStatusTypes::STATUS_ERROR,
                 [
                     'message' => 'Could not connect',
                     'code' => 0,
@@ -208,7 +208,7 @@ class Client
         } else {
             return new SsoResponse(
                 $call,
-                StatusTypes::STATUS_ERROR,
+                ResponseStatusTypes::STATUS_ERROR,
                 [
                     'message' => 'Response was not valid',
                     'code' => 0,

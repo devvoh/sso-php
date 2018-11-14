@@ -60,12 +60,12 @@ class SsoResponse
 
     public function isSuccess(): bool
     {
-        return $this->status === StatusTypes::STATUS_SUCCESS;
+        return $this->status === ResponseStatusTypes::STATUS_SUCCESS;
     }
 
     public function isError(): bool
     {
-        return $this->status === StatusTypes::STATUS_ERROR;
+        return $this->status === ResponseStatusTypes::STATUS_ERROR;
     }
 
     /**
@@ -99,7 +99,7 @@ class SsoResponse
 
     public static function createFromArray(array $array): self
     {
-        if ($array['status'] === StatusTypes::STATUS_ERROR) {
+        if ($array['status'] === ResponseStatusTypes::STATUS_ERROR) {
             $errorMessage = $array['data']['message'];
             $errorCode = $array['data']['code'];
         }

@@ -1,13 +1,13 @@
 <?php
 
-use SsoPhp\Server;
+use SsoPhp\SsoServer;
 
 require __DIR__ . '/../vendor/autoload.php';
 require __DIR__ . '/ExampleProvider.php';
 
 $headers = getallheaders();
 
-$server = new Server(
+$server = new SsoServer(
     $headers['client_secret'],
     $headers['client_token'],
     new ExampleProvider()

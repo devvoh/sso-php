@@ -1,5 +1,7 @@
 <?php
 
+use SsoPhp\SsoClient;
+
 require __DIR__ . '/../vendor/autoload.php';
 
 $verbose = in_array("--verbose", $argv);
@@ -23,7 +25,7 @@ if (!$verbose) {
 }
 writeln("");
 
-$client = new \SsoPhp\Client("secret", "client-token-goes-here", "http://127.0.0.1:9876/?action=");
+$client = new SsoClient("secret", "client-token-goes-here", "http://127.0.0.1:9876/?action=");
 
 write("Connecting to server ({$client->getServerUrl()}connect)... ");
 
