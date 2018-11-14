@@ -164,14 +164,14 @@ class Client
         curl_close($curl);
 
         if ($jsonResponse === false) {
-            return [
+            return new ClientResponse([
                 'status' => 'error',
                 'data' => [
                     'message' => 'Could not connect',
                     'code' => 0,
                 ],
                 'call' => $call,
-            ];
+            ]);
         }
 
         $response = json_decode($jsonResponse, true);
