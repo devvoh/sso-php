@@ -8,8 +8,8 @@ require __DIR__ . '/ExampleProvider.php';
 $headers = getallheaders();
 
 $server = new SsoServer(
-    $headers['client_secret'],
-    $headers['client_token'],
+    $headers['client_secret'] ?? '',
+    $headers['client_token'] ?? '',
     new ExampleProvider()
 );
 
