@@ -68,6 +68,22 @@ class ExampleProvider implements ProviderInterface, ContextualProviderInterface
         return true;
     }
 
+    public function deleteUser(string $username): bool
+    {
+        if (!isset($this->userStorage[$username])) {
+            return false;
+        }
+
+        if ($username === 'user') {
+            return false;
+        }
+
+        unset($this->userStorage[$username]);
+        unset($this->tokenStorage[$username]);
+
+        return true;
+    }
+
     public function registerUserWithContext(string $username, string $password, array $context): bool
     {
         $this->userStorage[$username] = [

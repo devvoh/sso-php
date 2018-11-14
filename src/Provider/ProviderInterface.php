@@ -12,6 +12,8 @@ interface ProviderInterface
 
     public function registerUser(string $username, string $password): bool;
 
+    public function deleteUser(string $username): bool;
+
     public function loginUser(string $username, string $password): bool;
 
     public function validateToken(string $username, string $token): bool;

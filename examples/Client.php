@@ -163,3 +163,17 @@ if ($response->isSuccess()) {
 }
 
 writeln("Token invalidated, logged out.");
+
+write("Delete this user? [y/N] ");
+$delete = trim(fgets(STDIN));
+
+if (strtolower($delete) === 'y') {
+    $response = $client->deleteUser($user);
+
+    if ($response->isError()) {
+        writeln("Could not delete user.");
+        exit(1);
+    }
+
+    writeln("Deleted user.");
+}

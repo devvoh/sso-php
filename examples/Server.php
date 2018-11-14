@@ -29,6 +29,9 @@ switch ($action) {
     case 'register':
         echo $server->register()->toJson();
         return;
+    case 'deleteUser':
+        echo $server->deleteUser()->toJson();
+        return;
     case 'registerWithContext':
         echo $server->registerWithContext()->toJson();
         return;

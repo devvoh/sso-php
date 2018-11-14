@@ -67,11 +67,20 @@ class SsoClient
         return $response;
     }
 
+    public function deleteUser(string $username): SsoResponse
+    {
+        $response = $this->makeRequest("POST", "deleteUser", [], [
+            'username' => $username,
+        ]);
+
+        return $response;
+    }
+
     public function login(string $username, string $password): SsoResponse
     {
         $authorization = $this->buildAuthorization($username, $password);
 
-        $response = $this->makeRequest("GET", "login", [
+        $response = $this->makeRequest("POST", "login", [
             "Authorization" => "Basic {$authorization}",
         ]);
 
@@ -123,7 +132,7 @@ class SsoClient
     {
         $authorization = $this->buildAuthorization($username, $token);
 
-        $response = $this->makeRequest("GET", "logout", [
+        $response = $this->makeRequest("POST", "logout", [
             "Authorization" => "Bearer {$authorization}",
         ]);
 

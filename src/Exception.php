@@ -8,19 +8,20 @@ class Exception extends \Exception
 {
     public const CLIENT_CREDENTIALS_INVALID = 10;
     public const REGISTER_FAILED = 20;
-    public const LOGIN_FAILED = 30;
-    public const TOKEN_VALIDATION_FAILED = 40;
-    public const NO_AUTHORIZATION_HEADER = 50;
-    public const INVALID_AUTHORIZATION_HEADER = 60;
-    public const LOGIN_URL_GENERATION_FAILED = 70;
-    public const LOGIN_URL_GENERATION_NOT_SUPPORTED = 80;
-    public const REGISTER_URL_GENERATION_FAILED = 90;
-    public const REGISTER_URL_GENERATION_NOT_SUPPORTED = 100;
-    public const TOKEN_REVOCATION_FAILED = 110;
-    public const UPDATE_CONTEXT_FAILED = 120;
-    public const UPDATE_CONTEXT_NOT_SUPPORTED = 130;
-    public const REGISTER_WITH_CONTEXT_FAILED = 140;
-    public const REGISTER_WITH_CONTEXT_NOT_SUPPORTED = 150;
+    public const DELETE_USER_FAILED = 30;
+    public const LOGIN_FAILED = 40;
+    public const TOKEN_VALIDATION_FAILED = 50;
+    public const NO_AUTHORIZATION_HEADER = 60;
+    public const INVALID_AUTHORIZATION_HEADER = 70;
+    public const LOGIN_URL_GENERATION_FAILED = 80;
+    public const LOGIN_URL_GENERATION_NOT_SUPPORTED = 90;
+    public const REGISTER_URL_GENERATION_FAILED = 100;
+    public const REGISTER_URL_GENERATION_NOT_SUPPORTED = 110;
+    public const TOKEN_REVOCATION_FAILED = 120;
+    public const UPDATE_CONTEXT_FAILED = 130;
+    public const UPDATE_CONTEXT_NOT_SUPPORTED = 140;
+    public const REGISTER_WITH_CONTEXT_FAILED = 150;
+    public const REGISTER_WITH_CONTEXT_NOT_SUPPORTED = 160;
 
     /**
      * @var string|null
@@ -53,6 +54,14 @@ class Exception extends \Exception
     public static function registerFailed(): self
     {
         return new self('register', 'Register failed', self::REGISTER_FAILED);
+    }
+
+    /**
+     * @return self
+     */
+    public static function deleteUserFailed(): self
+    {
+        return new self('deleteUser', 'Delete user failed', self::DELETE_USER_FAILED);
     }
 
     /**

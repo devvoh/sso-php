@@ -69,6 +69,12 @@ class SsoServer
 
     public function register(): SsoResponse
     {
+        if (!$this->provider->validateCredentials()) {
+            return $this->errorResponseFromException(
+                Exception::clientCredentialsInvalid()
+            );
+        }
+
         $authorization = $_POST['authorization'] ?? null;
 
         if ($authorization === null) {
@@ -101,8 +107,53 @@ class SsoServer
         );
     }
 
+    public function deleteUser(): SsoResponse
+    {
+        if (!$this->provider->validateCredentials()) {
+            return $this->errorResponseFromException(
+                Exception::clientCredentialsInvalid()
+            );
+        }
+
+        /** @var string|null $username */
+        $username = $_POST['username'] ?? null;
+
+        if ($username === null) {
+            return $this->errorResponseFromException(
+                Exception::deleteUserFailed()
+            );
+        }
+
+        if (!$this->provider->deleteUser($username)) {
+            return $this->errorResponseFromException(
+                Exception::deleteUserFailed()
+            );
+        }
+        
+        $metadata = $this->provider->getMetadataForCall(
+            'deleteUser',
+            [
+                'username' => $username
+            ]
+        );
+
+        return $this->successResponse(
+            'deleteUser',
+            [
+                'username' => $username,
+                'metadata' => $metadata,
+            ]
+        );
+    }
+
     public function login(): SsoResponse
     {
+        if (!$this->provider->validateCredentials()) {
+            return $this->errorResponseFromException(
+                Exception::clientCredentialsInvalid()
+            );
+        }
+
         [$username, $password] = $this->parseAuthorization();
 
         if (!$this->provider->loginUser($username, $password)) {
@@ -132,6 +183,12 @@ class SsoServer
 
     public function validateToken(): SsoResponse
     {
+        if (!$this->provider->validateCredentials()) {
+            return $this->errorResponseFromException(
+                Exception::clientCredentialsInvalid()
+            );
+        }
+
         [$username, $token] = $this->parseAuthorization();
 
         if (!$this->provider->validateToken($username, $token)) {
@@ -159,6 +216,12 @@ class SsoServer
 
     public function logout(): SsoResponse
     {
+        if (!$this->provider->validateCredentials()) {
+            return $this->errorResponseFromException(
+                Exception::clientCredentialsInvalid()
+            );
+        }
+
         [$username, $token] = $this->parseAuthorization();
 
         if (!$this->provider->revokeToken($username, $token)) {
@@ -185,6 +248,12 @@ class SsoServer
 
     public function generateLoginUrl(): SsoResponse
     {
+        if (!$this->provider->validateCredentials()) {
+            return $this->errorResponseFromException(
+                Exception::clientCredentialsInvalid()
+            );
+        }
+
         if (!($this->provider instanceof ExternalProviderInterface)) {
             return $this->errorResponseFromException(
                 Exception::loginUrlGenerationNotSupported()
@@ -217,6 +286,12 @@ class SsoServer
 
     public function generateRegisterUrl(): SsoResponse
     {
+        if (!$this->provider->validateCredentials()) {
+            return $this->errorResponseFromException(
+                Exception::clientCredentialsInvalid()
+            );
+        }
+
         if (!($this->provider instanceof ExternalProviderInterface)) {
             return $this->errorResponseFromException(
                 Exception::registerUrlGenerationNotSupported()
@@ -249,6 +324,12 @@ class SsoServer
 
     public function registerWithContext(): SsoResponse
     {
+        if (!$this->provider->validateCredentials()) {
+            return $this->errorResponseFromException(
+                Exception::clientCredentialsInvalid()
+            );
+        }
+
         if (!($this->provider instanceof ContextualProviderInterface)) {
             return $this->errorResponseFromException(
                 Exception::registerWithContextNotSupported()
@@ -268,7 +349,7 @@ class SsoServer
 
         if (!$this->provider->updateContext($username, $context)) {
             return $this->errorResponseFromException(
-                Exception::updateContextFailed()
+                Exception::registerWithContextFailed()
             );
         }
 
@@ -291,6 +372,12 @@ class SsoServer
 
     public function updateContext(): SsoResponse
     {
+        if (!$this->provider->validateCredentials()) {
+            return $this->errorResponseFromException(
+                Exception::clientCredentialsInvalid()
+            );
+        }
+
         if (!($this->provider instanceof ContextualProviderInterface)) {
             return $this->errorResponseFromException(
                 Exception::updateContextNotSupported()
@@ -300,6 +387,12 @@ class SsoServer
         [$username, $token] = $this->parseAuthorization();
 
         $context = $_POST['context'] ?? [];
+
+        if (!is_array($context)) {
+            return $this->errorResponseFromException(
+                Exception::updateContextFailed()
+            );
+        }
 
         if (!$this->provider->validateToken($username, $token)) {
             return $this->errorResponseFromException(
