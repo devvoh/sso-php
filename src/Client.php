@@ -2,6 +2,8 @@
 
 namespace SsoPhp;
 
+use SsoPhp\Client\ClientResponse;
+
 class Client
 {
     /**
@@ -19,10 +21,19 @@ class Client
      */
     protected $serverUrl;
 
+    /**
+     * @var array
+     */
+    protected $options = [
+        CURLOPT_CONNECTTIMEOUT => 5,
+        CURLOPT_TIMEOUT => 10,
+    ];
+
     public function __construct(
         string $clientSecret,
         string $clientToken,
-        string $serverUrl
+        string $serverUrl,
+        array $options = []
     ) {
         $this->clientSecret = $clientSecret;
         $this->clientToken = $clientToken;
@@ -31,6 +42,10 @@ class Client
         if (mb_substr($this->serverUrl, -1) !== "=") {
             $this->serverUrl .= "/";
         }
+
+        foreach ($options as $option => $value) {
+            $this->options[$option] = $value;
+        }
     }
 
     public function getServerUrl(): string
@@ -38,12 +53,12 @@ class Client
         return $this->serverUrl;
     }
 
-    public function connect(): array
+    public function connect(): ClientResponse
     {
         return $this->makeRequest("GET", "connect");
     }
 
-    public function register(string $username, string $password, array $context = []): array
+    public function register(string $username, string $password, array $context = []): ClientResponse
     {
         $authorization = $this->buildAuthorization($username, $password);
 
@@ -55,7 +70,7 @@ class Client
         return $response;
     }
 
-    public function login(string $username, string $password): array
+    public function login(string $username, string $password): ClientResponse
     {
         $authorization = $this->buildAuthorization($username, $password);
 
@@ -66,7 +81,7 @@ class Client
         return $response;
     }
 
-    public function validateToken(string $username, string $token): array
+    public function validateToken(string $username, string $token): ClientResponse
     {
         $authorization = $this->buildAuthorization($username, $token);
 
@@ -77,7 +92,7 @@ class Client
         return $response;
     }
 
-    public function logout(string $username, string $token): array
+    public function logout(string $username, string $token): ClientResponse
     {
         $authorization = $this->buildAuthorization($username, $token);
 
@@ -88,14 +103,14 @@ class Client
         return $response;
     }
 
-    public function generateRegisterUrl(): array
+    public function generateRegisterUrl(): ClientResponse
     {
         $response = $this->makeRequest("GET", "generateRegisterUrl");
 
         return $response;
     }
 
-    public function generateLoginUrl(): array
+    public function generateLoginUrl(): ClientResponse
     {
         $response = $this->makeRequest("GET", "generateLoginUrl");
 
@@ -116,7 +131,7 @@ class Client
         string $call,
         array $headers = [],
         array $postValues = []
-    ): array {
+    ): ClientResponse {
         $url = $this->serverUrl . ltrim($call, "/");
 
         $curl = curl_init();
@@ -131,6 +146,10 @@ class Client
         curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
 
+        foreach ($this->options as $curlopt => $value) {
+            curl_setopt($curl, $curlopt, $value);
+        }
+
         $headers["client_secret"] = $this->clientSecret;
         $headers["client_token"] = $this->clientToken;
 
@@ -144,18 +163,33 @@ class Client
         $jsonResponse = curl_exec($curl);
         curl_close($curl);
 
-        $response = json_decode($jsonResponse, true);
-
-        if (json_last_error() === JSON_ERROR_NONE && is_array($response)) {
-            $response["call"] = $call;
-        } else {
-            $response = [
-                "call" => $call,
-                "error" => "Response was not valid",
-                "response" => $jsonResponse
+        if ($jsonResponse === false) {
+            return [
+                'status' => 'error',
+                'data' => [
+                    'message' => 'Could not connect',
+                    'code' => 0,
+                ],
+                'call' => $call,
             ];
         }
 
-        return $response;
+        $response = json_decode($jsonResponse, true);
+
+        if (json_last_error() === JSON_ERROR_NONE && is_array($response)) {
+            $response['call'] = $call;
+        } else {
+            $response = [
+                'status' => 'error',
+                'data' => [
+                    'message' => 'Response was not valid',
+                    'code' => 0,
+                    'response' => $jsonResponse,
+                ],
+                'call' => $call,
+            ];
+        }
+
+        return new ClientResponse($response);
     }
 }

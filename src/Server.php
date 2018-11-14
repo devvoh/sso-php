@@ -109,8 +109,8 @@ class Server
         $metadata = $this->provider->getMetadataForContext(
             'login',
             [
+                'token' => $token,
                 'username' => $username,
-                'token' => $token
             ]
         );
 
@@ -133,12 +133,13 @@ class Server
         $metadata = $this->provider->getMetadataForContext(
             'validateToken',
             [
+                'token' => $token,
                 'username' => $username,
-                'token' => $token
             ]
         );
 
         return $this->successResponse([
+            'token' => $token,
             'metadata' => $metadata
         ]);
     }
@@ -156,8 +157,8 @@ class Server
         $metadata = $this->provider->getMetadataForContext(
             'logout',
             [
+                'token' => $token,
                 'username' => $username,
-                'token' => $token
             ]
         );
 
@@ -264,11 +265,13 @@ class Server
     {
         $response = [
             'status' => 'error',
-            'message' => $message,
+            'data' => [
+                'message' => $message,
+            ]
         ];
 
         if ($code !== null) {
-            $response['code'] = $code;
+            $response['data']['code'] = $code;
         }
 
         return $response;
