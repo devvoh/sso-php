@@ -1,6 +1,6 @@
 <?php
 
-use SsoPhp\SsoClient;
+use SsoPhp\Client;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -17,22 +17,39 @@ function writeln(string $msg): void
     write(PHP_EOL);
 }
 
+function writeresponse(string $msg): void
+{
+    writeln('');
+    writeln('  ' . $msg);
+}
+
 writeln("devvoh/sso-php example client");
+
+writeln(str_repeat('-', 80));
+
 if (!$verbose) {
     writeln("use --verbose to also output all server responses");
 } else {
     writeln("verbose mode on, showing all server responses");
 }
-writeln("");
 
-$client = new SsoClient("secret", "client-token-goes-here", "http://127.0.0.1:9876/?action=");
+writeln(str_repeat('-', 80));
+
+// We specifically disable secure mode so we can connect to an insecure http:// server url for example purposes
+const SSO_CLIENT_SECURE_MODE = false;
+
+// We disable E_USER_NOTICE loging since disabling secure mode /will/ trigger a notice that it's a BAD IDEA.
+error_reporting(E_ALL & ~E_USER_NOTICE);
+
+$client = new Client("secret", "client-token-goes-here", "http://127.0.0.1:9876/?action=");
+// So don't do this on production EVER.
 
 write("Connecting to server ({$client->getServerUrl()}connect)... ");
 
 $response = $client->connect();
 
 if ($verbose) {
-    writeln($response->toJson());
+    writeresponse($response->toJson());
 }
 
 if ($response->isError()) {
@@ -41,6 +58,8 @@ if ($response->isError()) {
 }
 
 writeln("Connected!");
+
+writeln(str_repeat('-', 80));
 
 write("Register new user? [y/N] ");
 $register = trim(fgets(STDIN));
@@ -61,9 +80,8 @@ if (strtolower($register) === 'y') {
         $response = $client->register($user, $pass);
     }
 
-
     if ($verbose) {
-        writeln($response->toJson());
+        writeresponse($response->toJson());
     }
 
     if ($response->isError()) {
@@ -73,6 +91,8 @@ if (strtolower($register) === 'y') {
 
     writeln('User registered.');
 }
+
+writeln(str_repeat('-', 80));
 
 writeln("Log in now...");
 
@@ -87,7 +107,7 @@ write("Logging in with {$user}:{$pass}@{$client->getServerUrl()}login... ");
 $response = $client->login($user, $pass);
 
 if ($verbose) {
-    writeln($response->toJson());
+    writeresponse($response->toJson());
 }
 
 if ($response->isError()) {
@@ -99,12 +119,14 @@ writeln("Logged in as '{$response->getFromMetadata('username')}'.");
 
 $token = $response->getFromData('token');
 
+writeln(str_repeat('-', 80));
+
 write("Validating token ({$client->getServerUrl()}validateToken)... ");
 
 $response = $client->validateToken($user, $token);
 
 if ($verbose) {
-    writeln($response->toJson());
+    writeresponse($response->toJson());
 }
 
 if ($response->isError()) {
@@ -114,32 +136,39 @@ if ($response->isError()) {
 
 writeln("Token validated.");
 
-writeln("Hit enter to update the user's context...");
-fgets(STDIN);
+writeln(str_repeat('-', 80));
 
 $currentContext = $response->getFromMetadata('context');
-$currentContext['example'] = (int)$currentContext['example'] + 1;
 
-$response = $client->updateContext($user, $token, $currentContext);
+if ($currentContext !== null) {
+    writeln("Hit enter to update the user's context...");
+    fgets(STDIN);
 
-if ($verbose) {
-    writeln($response->toJson());
-}
+    $currentContext['example'] = (int)$currentContext['example'] + 1;
 
-if ($response->isError()) {
-    writeln("Could not update user context.");
-    exit(1);
+    $response = $client->updateContext($user, $token, $currentContext);
+
+    if ($verbose) {
+        writeresponse($response->toJson());
+    }
+
+    if ($response->isError()) {
+        writeln("Could not update user context.");
+        exit(1);
+    }
+
+    writeln(str_repeat('-', 80));
 }
 
 writeln("Hit enter to log out. This is where you can check token_storage.json. The token will disappear after logging out...");
 fgets(STDIN);
 
-write("Logging out ({$client->getServerUrl()}logout)... ");
+write("Logging out ({$client->getServerUrl()}revokeToken)... ");
 
-$response = $client->logout($user, $token);
+$response = $client->revokeToken($user, $token);
 
 if ($verbose) {
-    writeln($response->toJson());
+    writeresponse($response->toJson());
 }
 
 if ($response->isError()) {
@@ -149,12 +178,14 @@ if ($response->isError()) {
 
 writeln("Logged out.");
 
+writeln(str_repeat('-', 80));
+
 write("Validating token after logging out... ");
 
 $response = $client->validateToken($user, $token);
 
 if ($verbose) {
-    writeln($response->toJson());
+    writeresponse($response->toJson());
 }
 
 if ($response->isSuccess()) {
@@ -164,11 +195,17 @@ if ($response->isSuccess()) {
 
 writeln("Token invalidated, logged out.");
 
+writeln(str_repeat('-', 80));
+
 write("Delete this user? [y/N] ");
 $delete = trim(fgets(STDIN));
 
 if (strtolower($delete) === 'y') {
     $response = $client->deleteUser($user);
+
+    if ($verbose) {
+        writeresponse($response->toJson());
+    }
 
     if ($response->isError()) {
         writeln("Could not delete user.");

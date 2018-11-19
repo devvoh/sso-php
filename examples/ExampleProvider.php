@@ -29,6 +29,13 @@ class ExampleProvider implements ProviderInterface, ContextualProviderInterface
     public function __construct()
     {
         $this->loadStorage();
+
+        // Make sure the default user always exists
+        if (!isset($this->userStorage['user'])) {
+            $this->userStorage['user'] = [
+                'password' => 'pass',
+            ];
+        }
     }
 
     public function __destruct()
@@ -61,6 +68,10 @@ class ExampleProvider implements ProviderInterface, ContextualProviderInterface
 
     public function registerUser(string $username, string $password): bool
     {
+        if ($username === 'user') {
+            return false;
+        }
+
         $this->userStorage[$username] = [
             'password' => $password,
         ];
@@ -86,6 +97,10 @@ class ExampleProvider implements ProviderInterface, ContextualProviderInterface
 
     public function registerUserWithContext(string $username, string $password, array $context): bool
     {
+        if (isset($this->userStorage[$username])) {
+            return false;
+        }
+
         $this->userStorage[$username] = [
             'password' => $password,
             'context' => $context,
@@ -97,14 +112,10 @@ class ExampleProvider implements ProviderInterface, ContextualProviderInterface
     public function loginUser(string $username, string $password): bool
     {
         $user = $this->userStorage[$username] ?? null;
+        $pass = $this->userStorage[$username]['password'] ?? null;
 
-        if ($user && $user['password'] === $password) {
+        if ($user && $pass === $password) {
             return true;
-        }
-
-        // we have a default login for example purposes
-        if ($username !== 'user' || $password !== 'pass') {
-            return false;
         }
 
         return true;

@@ -1,13 +1,13 @@
 <?php
 
-use SsoPhp\SsoServer;
+use SsoPhp\Server;
 
 require __DIR__ . '/../vendor/autoload.php';
 require __DIR__ . '/ExampleProvider.php';
 
 $headers = getallheaders();
 
-$server = new SsoServer(
+$server = new Server(
     $headers['client_secret'] ?? '',
     $headers['client_token'] ?? '',
     new ExampleProvider()
@@ -41,8 +41,8 @@ switch ($action) {
     case 'validateToken':
         echo $server->validateToken()->toJson();
         return;
-    case 'logout':
-        echo $server->logout()->toJson();
+    case 'revokeToken':
+        echo $server->revokeToken()->toJson();
         return;
     case 'updateContext':
         echo $server->updateContext()->toJson();
