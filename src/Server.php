@@ -2,7 +2,6 @@
 
 namespace SsoPhp;
 
-use phpDocumentor\Reflection\Types\Context;
 use SsoPhp\Exceptions\AbstractException;
 use SsoPhp\Exceptions\ContextualSsoException;
 use SsoPhp\Exceptions\ExternalSsoException;
@@ -106,11 +105,7 @@ class Server
             /** @var string|null $username */
             $username = $_POST['username'] ?? null;
 
-            if ($username === null) {
-                throw SsoException::deleteUserFailed();
-            }
-
-            if (!$this->provider->deleteUser($username)) {
+            if ($username === null || !$this->provider->deleteUser($username)) {
                 throw SsoException::deleteUserFailed();
             }
         } catch (AbstractException $e) {
@@ -136,13 +131,7 @@ class Server
         try {
             $this->validateCredentials();
 
-            $authorization = $this->parseAuthorization();
-
-            if ($authorization === null) {
-                throw SsoException::loginFailed();
-            }
-
-            [$username, $password] = $authorization;
+            [$username, $password] = $this->parseAuthorization();
 
             if (!$this->provider->loginUser($username, $password)) {
                 throw SsoException::loginFailed();
@@ -236,7 +225,7 @@ class Server
 
             $url = $this->provider->generateLoginUrl();
 
-            if (!$url) {
+            if (empty($url)) {
                 throw ExternalSsoException::loginUrlGenerationFailed();
             }
         } catch (AbstractException $e) {
@@ -268,7 +257,7 @@ class Server
 
             $url = $this->provider->generateRegisterUrl();
 
-            if (!$url) {
+            if (empty($url)) {
                 throw ExternalSsoException::registerUrlGenerationFailed();
             }
         } catch (AbstractException $e) {
@@ -305,11 +294,6 @@ class Server
             }
 
             $username = $response->getFromData('username');
-
-            if ($username === null) {
-                throw ContextualSsoException::registerWithContextFailed();
-            }
-
             $context = $_POST['context'] ?? [];
 
             if (!$this->provider->updateContext($username, $context)) {
@@ -339,25 +323,13 @@ class Server
         try {
             $this->validateCredentials();
 
-            if (!$this->provider->validateCredentials()) {
-                throw SsoException::clientCredentialsInvalid();
-            }
-
             if (!($this->provider instanceof ContextualProviderInterface)) {
                 throw ContextualSsoException::updateContextNotSupported();
             }
 
-            [$username, $token] = $this->parseAuthorization();
+            [$username,] = $this->parseAuthorization();
 
             $context = $_POST['context'] ?? [];
-
-            if (!is_array($context)) {
-                throw ContextualSsoException::updateContextFailed();
-            }
-
-            if (!$this->provider->validateToken($username, $token)) {
-                throw ContextualSsoException::updateContextFailed();
-            }
 
             if (!$this->provider->updateContext($username, $context)) {
                 throw ContextualSsoException::updateContextFailed();
@@ -483,12 +455,8 @@ class Server
             $call = $exception->getCall();
         }
 
-        if ($call === null) {
-            $call = debug_backtrace()[1]['function'] ?? null;
-        }
-
         return $this->errorResponse(
-            $call ?? null,
+            $call ?? debug_backtrace()[1]['function'] ?? null,
             $exception->getMessage(),
             $exception->getCode()
         );

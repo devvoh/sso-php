@@ -5,5 +5,6 @@ namespace SsoPhp\Provider;
 interface ExternalProviderInterface
 {
     public function generateRegisterUrl(): string;
+
     public function generateLoginUrl(): string;
 }
