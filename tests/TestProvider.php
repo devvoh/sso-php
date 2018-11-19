@@ -9,16 +9,6 @@ use SsoPhp\Provider\ProviderInterface;
 class TestProvider implements ProviderInterface, ContextualProviderInterface, ExternalProviderInterface
 {
     /**
-     * @var string
-     */
-    public $clientSecret;
-
-    /**
-     * @var string
-     */
-    public $clientToken;
-
-    /**
      * @var array
      */
     public $users = [
@@ -67,19 +57,9 @@ class TestProvider implements ProviderInterface, ContextualProviderInterface, Ex
         return 'https://server.test/login';
     }
 
-    public function setClientSecret(string $clientSecret): void
+    public function validateCredentials(string $clientSecret, string $clientToken): bool
     {
-        $this->clientSecret = $clientSecret;
-    }
-
-    public function setClientToken(string $clientToken): void
-    {
-        $this->clientToken = $clientToken;
-    }
-
-    public function validateCredentials(): bool
-    {
-        return $this->clientSecret === 'secret' && $this->clientToken === 'token';
+        return $clientSecret === 'secret' && $clientToken === 'token';
     }
 
     public function registerUser(string $username, string $password): bool

@@ -34,18 +34,14 @@ class Server
     protected $headers = [];
 
     public function __construct(
-        string $clientSecret,
-        string $clientToken,
         ProviderInterface $provider
     ) {
-        $this->clientSecret = $clientSecret;
-        $this->clientToken = $clientToken;
         $this->provider = $provider;
 
         $this->headers = getallheaders();
 
-        $this->provider->setClientSecret($clientSecret);
-        $this->provider->setClientToken($clientToken);
+        $this->clientSecret = $this->headers['Sso-Php-Client-Secret'] ?? null;
+        $this->clientToken = $this->headers['Sso-Php-Client-Token'] ?? null;
     }
 
     public function connect(): Response
@@ -355,7 +351,7 @@ class Server
 
     protected function validateCredentials(): void
     {
-        if (!$this->provider->validateCredentials()) {
+        if (!$this->provider->validateCredentials($this->clientSecret, $this->clientToken)) {
             throw SsoException::clientCredentialsInvalid();
         }
     }

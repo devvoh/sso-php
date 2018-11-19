@@ -53,13 +53,13 @@ class ExampleProvider implements ProviderInterface, ContextualProviderInterface
         $this->clientToken = $clientToken;
     }
 
-    public function validateCredentials(): bool
+    public function validateCredentials(string $clientSecret, string $clientToken): bool
     {
-        if ($this->clientSecret !== 'secret') {
+        if ($clientSecret !== 'secret') {
             return false;
         }
 
-        if ($this->clientToken !== 'client-token-goes-here') {
+        if ($clientToken !== 'client-token-goes-here') {
             return false;
         }
 

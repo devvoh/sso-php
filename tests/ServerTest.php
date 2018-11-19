@@ -11,12 +11,15 @@ class ServerTest extends \PHPUnit\Framework\TestCase
     {
         $_POST = [];
 
+        $_SERVER['HTTP_SSO_PHP_CLIENT_SECRET'] = 'secret';
+        $_SERVER['HTTP_SSO_PHP_CLIENT_TOKEN'] = 'token';
+
         parent::setUp();
     }
 
     public function testConnectSuccessfully()
     {
-        $server = new Server('secret', 'token', $provider = new TestProvider());
+        $server = new Server($provider = new TestProvider());
 
         $response = $server->connect();
 
@@ -31,7 +34,10 @@ class ServerTest extends \PHPUnit\Framework\TestCase
 
     public function testConnectUnsuccessfully()
     {
-        $server = new Server('bad_secret', 'bad_token', $provider = new TestProvider());
+        $_SERVER['HTTP_SSO_PHP_CLIENT_SECRET'] = 'nope';
+        $_SERVER['HTTP_SSO_PHP_CLIENT_TOKEN'] = 'seriously nope';
+
+        $server = new Server($provider = new TestProvider());
 
         $response = $server->connect();
 
@@ -43,7 +49,7 @@ class ServerTest extends \PHPUnit\Framework\TestCase
 
     public function testRegisterSuccessfully()
     {
-        $server = new Server('secret', 'token', $provider = new TestProvider());
+        $server = new Server($provider = new TestProvider());
 
         self::assertCount(1, $provider->users);
 
@@ -60,7 +66,7 @@ class ServerTest extends \PHPUnit\Framework\TestCase
 
     public function testRegisterFailsIfNoAuthorizationInPost()
     {
-        $server = new Server('secret', 'token', $provider = new TestProvider());
+        $server = new Server($provider = new TestProvider());
 
         self::assertCount(1, $provider->users);
 
@@ -75,7 +81,7 @@ class ServerTest extends \PHPUnit\Framework\TestCase
 
     public function testRegisterFailsIfAuthorizationInvalid()
     {
-        $server = new Server('secret', 'token', $provider = new TestProvider());
+        $server = new Server($provider = new TestProvider());
 
         self::assertCount(1, $provider->users);
 
@@ -92,7 +98,7 @@ class ServerTest extends \PHPUnit\Framework\TestCase
 
     public function testRegisterFailsForAlreadyExistingUser()
     {
-        $server = new Server('secret', 'token', $provider = new TestProvider());
+        $server = new Server($provider = new TestProvider());
 
         self::assertCount(1, $provider->users);
 
@@ -109,7 +115,7 @@ class ServerTest extends \PHPUnit\Framework\TestCase
 
     public function testDeleteUserWorks()
     {
-        $server = new Server('secret', 'token', $provider = new TestProvider());
+        $server = new Server($provider = new TestProvider());
 
         $provider->users['deletable'] = ['yup'];
 
@@ -129,7 +135,7 @@ class ServerTest extends \PHPUnit\Framework\TestCase
 
     public function testDeleteUserDoesntWorkWithoutUsernameInPost()
     {
-        $server = new Server('secret', 'token', $provider = new TestProvider());
+        $server = new Server($provider = new TestProvider());
 
         $response = $server->deleteUser();
 
@@ -144,7 +150,7 @@ class ServerTest extends \PHPUnit\Framework\TestCase
     {
         $_SERVER['HTTP_AUTHORIZATION'] = 'Basic ' . base64_encode('user:pass');
 
-        $server = new Server('secret', 'token', $provider = new TestProvider());
+        $server = new Server($provider = new TestProvider());
 
         $response = $server->login();
 
@@ -156,7 +162,7 @@ class ServerTest extends \PHPUnit\Framework\TestCase
     {
         $_SERVER['HTTP_AUTHORIZATION'] = 'Basic ' . base64_encode('user:nope');
 
-        $server = new Server('secret', 'token', $provider = new TestProvider());
+        $server = new Server($provider = new TestProvider());
 
         $response = $server->login();
 
@@ -169,7 +175,7 @@ class ServerTest extends \PHPUnit\Framework\TestCase
     {
         $_SERVER['HTTP_AUTHORIZATION'] = 'Basic ' . base64_encode('nope:nope');
 
-        $server = new Server('secret', 'token', $provider = new TestProvider());
+        $server = new Server($provider = new TestProvider());
 
         $response = $server->login();
 
@@ -182,7 +188,7 @@ class ServerTest extends \PHPUnit\Framework\TestCase
     {
         $_SERVER['HTTP_AUTHORIZATION'] = 'Basic ' . base64_encode('user:pass');
 
-        $server = new Server('secret', 'token', $provider = new TestProvider());
+        $server = new Server($provider = new TestProvider());
 
         $response = $server->login();
 
@@ -190,7 +196,7 @@ class ServerTest extends \PHPUnit\Framework\TestCase
 
         $_SERVER['HTTP_AUTHORIZATION'] = 'Bearer ' . base64_encode('user:' . $token);
 
-        $server = new Server('secret', 'token', $provider);
+        $server = new Server($provider);
 
         $response = $server->validateToken();
 
@@ -201,7 +207,7 @@ class ServerTest extends \PHPUnit\Framework\TestCase
     {
         $_SERVER['HTTP_AUTHORIZATION'] = 'Basic ' . base64_encode('user:nope');
 
-        $server = new Server('secret', 'token', $provider = new TestProvider());
+        $server = new Server($provider = new TestProvider());
 
         $response = $server->validateToken();
 
@@ -214,7 +220,7 @@ class ServerTest extends \PHPUnit\Framework\TestCase
     {
         $_SERVER['HTTP_AUTHORIZATION'] = 'Basic ' . base64_encode('user:pass');
 
-        $server = new Server('secret', 'token', $provider = new TestProvider());
+        $server = new Server($provider = new TestProvider());
 
         $response = $server->login();
 
@@ -222,7 +228,7 @@ class ServerTest extends \PHPUnit\Framework\TestCase
 
         $_SERVER['HTTP_AUTHORIZATION'] = 'Bearer ' . base64_encode('user:' . $token);
 
-        $server = new Server('secret', 'token', $provider);
+        $server = new Server($provider);
 
         $response = $server->validateToken();
 
@@ -239,7 +245,7 @@ class ServerTest extends \PHPUnit\Framework\TestCase
 
     public function testGenerateRegisterUrl()
     {
-        $server = new Server('secret', 'token', $provider = new TestProvider());
+        $server = new Server($provider = new TestProvider());
 
         $response = $server->generateRegisterUrl();
 
@@ -248,7 +254,7 @@ class ServerTest extends \PHPUnit\Framework\TestCase
 
     public function testGenerateLoginUrl()
     {
-        $server = new Server('secret', 'token', $provider = new TestProvider());
+        $server = new Server($provider = new TestProvider());
 
         $response = $server->generateLoginUrl();
 
@@ -257,7 +263,7 @@ class ServerTest extends \PHPUnit\Framework\TestCase
 
     public function testRegisterWithContext()
     {
-        $server = new Server('secret', 'token', $provider = new TestProvider());
+        $server = new Server($provider = new TestProvider());
 
         self::assertCount(1, $provider->users);
 
@@ -278,7 +284,7 @@ class ServerTest extends \PHPUnit\Framework\TestCase
     {
         $_SERVER['HTTP_AUTHORIZATION'] = 'Bearer ' . base64_encode('user:token');
 
-        $server = new Server('secret', 'token', $provider = new TestProvider());
+        $server = new Server($provider = new TestProvider());
 
         self::assertCount(1, $provider->users);
 

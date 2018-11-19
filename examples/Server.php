@@ -8,8 +8,6 @@ require __DIR__ . '/ExampleProvider.php';
 $headers = getallheaders();
 
 $server = new Server(
-    $headers['client_secret'] ?? '',
-    $headers['client_token'] ?? '',
     new ExampleProvider()
 );
 

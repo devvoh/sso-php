@@ -74,7 +74,7 @@ class ClientTest extends \PHPUnit\Framework\TestCase
 
         $this->assertSame('https://client.test/connect', $this->mockCurlRequest->getUrl());
         $this->assertSame(
-            ['client_secret: secret', 'client_token: token'],
+            ['Client-Secret: secret', 'Client-Token: token'],
             $this->mockCurlRequest->getOption(CURLOPT_HTTPHEADER)
         );
 
@@ -87,7 +87,7 @@ class ClientTest extends \PHPUnit\Framework\TestCase
 
         $this->assertSame('https://client.test/register', $this->mockCurlRequest->getUrl());
         $this->assertSame(
-            ['client_secret: secret', 'client_token: token'],
+            ['Client-Secret: secret', 'Client-Token: token'],
             $this->mockCurlRequest->getOption(CURLOPT_HTTPHEADER)
         );
 
@@ -105,7 +105,7 @@ class ClientTest extends \PHPUnit\Framework\TestCase
 
         $this->assertSame('https://client.test/deleteUser', $this->mockCurlRequest->getUrl());
         $this->assertSame(
-            ['client_secret: secret', 'client_token: token'],
+            ['Client-Secret: secret', 'Client-Token: token'],
             $this->mockCurlRequest->getOption(CURLOPT_HTTPHEADER)
         );
 
@@ -125,8 +125,8 @@ class ClientTest extends \PHPUnit\Framework\TestCase
         $this->assertSame(
             [
                 'Authorization: Basic dXNlcjpwYXNz',
-                'client_secret: secret',
-                'client_token: token',
+                'Client-Secret: secret',
+                'Client-Token: token',
             ],
             $this->mockCurlRequest->getOption(CURLOPT_HTTPHEADER)
         );
@@ -142,8 +142,8 @@ class ClientTest extends \PHPUnit\Framework\TestCase
         $this->assertSame(
             [
                 'Authorization: Bearer dXNlcjp0b2tlbg==',
-                'client_secret: secret',
-                'client_token: token',
+                'Client-Secret: secret',
+                'Client-Token: token',
             ],
             $this->mockCurlRequest->getOption(CURLOPT_HTTPHEADER)
         );
@@ -159,8 +159,8 @@ class ClientTest extends \PHPUnit\Framework\TestCase
         $this->assertSame(
             [
                 'Authorization: Bearer dXNlcjp0b2tlbg==',
-                'client_secret: secret',
-                'client_token: token',
+                'Client-Secret: secret',
+                'Client-Token: token',
             ],
             $this->mockCurlRequest->getOption(CURLOPT_HTTPHEADER)
         );
@@ -177,8 +177,8 @@ class ClientTest extends \PHPUnit\Framework\TestCase
         $this->assertSame('https://client.test/registerWithContext', $this->mockCurlRequest->getUrl());
         $this->assertSame(
             [
-                'client_secret: secret',
-                'client_token: token',
+                'Client-Secret: secret',
+                'Client-Token: token',
             ],
             $this->mockCurlRequest->getOption(CURLOPT_HTTPHEADER)
         );
@@ -201,8 +201,8 @@ class ClientTest extends \PHPUnit\Framework\TestCase
         $this->assertSame(
             [
                 'Authorization: Bearer dXNlcjp0b2tlbg==',
-                'client_secret: secret',
-                'client_token: token',
+                'Client-Secret: secret',
+                'Client-Token: token',
             ],
             $this->mockCurlRequest->getOption(CURLOPT_HTTPHEADER)
         );
@@ -222,8 +222,8 @@ class ClientTest extends \PHPUnit\Framework\TestCase
         $this->assertSame('https://client.test/generateRegisterUrl', $this->mockCurlRequest->getUrl());
         $this->assertSame(
             [
-                'client_secret: secret',
-                'client_token: token',
+                'Client-Secret: secret',
+                'Client-Token: token',
             ],
             $this->mockCurlRequest->getOption(CURLOPT_HTTPHEADER)
         );
@@ -238,8 +238,8 @@ class ClientTest extends \PHPUnit\Framework\TestCase
         $this->assertSame('https://client.test/generateLoginUrl', $this->mockCurlRequest->getUrl());
         $this->assertSame(
             [
-                'client_secret: secret',
-                'client_token: token',
+                'Client-Secret: secret',
+                'Client-Token: token',
             ],
             $this->mockCurlRequest->getOption(CURLOPT_HTTPHEADER)
         );

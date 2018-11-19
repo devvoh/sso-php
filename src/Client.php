@@ -201,8 +201,8 @@ class Client
             $curlRequest->setOption($name, $value);
         }
 
-        $headers["client_secret"] = $this->clientSecret;
-        $headers["client_token"] = $this->clientToken;
+        $headers["Client-Secret"] = $this->clientSecret;
+        $headers["Client-Token"] = $this->clientToken;
 
         $headersBuilt = [];
         foreach ($headers as $key => $value) {

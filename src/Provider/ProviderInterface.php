@@ -4,11 +4,7 @@ namespace SsoPhp\Provider;
 
 interface ProviderInterface
 {
-    public function setClientSecret(string $clientSecret): void;
-
-    public function setClientToken(string $clientToken): void;
-
-    public function validateCredentials(): bool;
+    public function validateCredentials(string $clientSecret, string $clientToken): bool;
 
     public function registerUser(string $username, string $password): bool;
 
