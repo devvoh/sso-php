@@ -47,11 +47,6 @@ class CurlRequest
         }
     }
 
-    public function getOptions(): array
-    {
-        return $this->options;
-    }
-
     public function getOption(int $name)
     {
         return $this->options[$name] ?? null;
@@ -89,10 +84,5 @@ class CurlRequest
         curl_close($this->resource);
 
         return $response;
-    }
-
-    public function getInfo(): array
-    {
-        return curl_getinfo($this->resource);
     }
 }

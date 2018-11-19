@@ -38,10 +38,8 @@ class Client
     ) {
         if (defined('SSO_CLIENT_SECURE_MODE') && SSO_CLIENT_SECURE_MODE === false) {
             trigger_error('Disabling secure mode is highly discouraged. End-to-end encryption safeguards credentials.');
-        } else {
-            if (substr($serverUrl, 0, 8) !== 'https://') {
-                throw SsoException::secureServerUrlRequired();
-            }
+        } elseif (substr($serverUrl, 0, 8) !== 'https://') {
+            throw SsoException::secureServerUrlRequired();
         }
 
         $this->clientSecret = $clientSecret;
@@ -69,63 +67,43 @@ class Client
 
     public function register(string $username, string $password): Response
     {
-        $authorization = $this->buildAuthorization($username, $password);
-
-        $response = $this->makeRequest("POST", "register", [], [
-            'authorization' => $authorization,
+        return $this->makeRequest("POST", "register", [], [
+            'authorization' => Authorization::buildAuthorization($username, $password),
         ]);
-
-        return $response;
     }
 
     public function deleteUser(string $username): Response
     {
-        $response = $this->makeRequest("POST", "deleteUser", [], [
+        return $this->makeRequest("POST", "deleteUser", [], [
             'username' => $username,
         ]);
-
-        return $response;
     }
 
     public function login(string $username, string $password): Response
     {
-        $authorization = $this->buildAuthorization($username, $password);
-
-        $response = $this->makeRequest("POST", "login", [
-            "Authorization" => "Basic {$authorization}",
+        return $this->makeRequest("POST", "login", [
+            "Authorization" => Authorization::buildBasicAuthorization($username, $password),
         ]);
-
-        return $response;
     }
 
     public function validateToken(string $username, string $token): Response
     {
-        $authorization = $this->buildAuthorization($username, $token);
-
-        $response = $this->makeRequest("GET", "validateToken", [
-            "Authorization" => "Bearer {$authorization}",
+        return $this->makeRequest("GET", "validateToken", [
+            "Authorization" => Authorization::buildBearerAuthorization($username, $token),
         ]);
-
-        return $response;
     }
 
     public function revokeToken(string $username, string $token): Response
     {
-        $authorization = $this->buildAuthorization($username, $token);
-
-        $response = $this->makeRequest("POST", "revokeToken", [
-            "Authorization" => "Bearer {$authorization}",
+        return $this->makeRequest("POST", "revokeToken", [
+            "Authorization" => Authorization::buildBearerAuthorization($username, $token),
         ]);
-
-        return $response;
     }
 
     public function registerWithContext(string $username, string $password, array $context = []): Response
     {
-        $authorization = $this->buildAuthorization($username, $password);
-
         $response = $this->makeRequest("POST", "registerWithContext", [], [
-            'authorization' => $authorization,
+            'authorization' => Authorization::buildAuthorization($username, $password),
             'context' => $context,
         ]);
 
@@ -134,13 +112,11 @@ class Client
 
     public function updateContext(string $username, string $token, array $context): Response
     {
-        $authorization = $this->buildAuthorization($username, $token);
-
         $response = $this->makeRequest(
             "POST",
             "updateContext",
             [
-                "Authorization" => "Bearer {$authorization}",
+                "Authorization" => Authorization::buildBearerAuthorization($username, $token),
             ],
             [
                 'context' => $context,
@@ -162,15 +138,6 @@ class Client
         $response = $this->makeRequest("GET", "generateLoginUrl");
 
         return $response;
-    }
-
-    protected function buildAuthorization(string $username, string $passwordOrToken): string
-    {
-        return base64_encode(sprintf(
-            '%s:%s',
-            $username,
-            $passwordOrToken
-        ));
     }
 
     protected function makeRequest(

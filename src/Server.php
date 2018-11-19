@@ -70,7 +70,7 @@ class Server
         try {
             $this->validateCredentials();
 
-            [$username, $password] = $this->parsePostAuthorization();
+            [$username, $password] = Authorization::parsePostAuthorization();
 
             if (!$this->provider->registerUser($username, $password)) {
                 throw SsoException::registerFailed();
@@ -127,7 +127,7 @@ class Server
         try {
             $this->validateCredentials();
 
-            [$username, $password] = $this->parseAuthorization();
+            [$username, $password] = Authorization::parseAuthorization();
 
             if (!$this->provider->loginUser($username, $password)) {
                 throw SsoException::loginFailed();
@@ -158,7 +158,7 @@ class Server
         try {
             $this->validateCredentials();
 
-            [$username, $token] = $this->parseAuthorization();
+            [$username, $token] = Authorization::parseAuthorization();
 
             if (!$this->provider->validateToken($username, $token)) {
                 throw SsoException::validateTokenFailed();
@@ -187,7 +187,7 @@ class Server
         try {
             $this->validateCredentials();
 
-            [$username, $token] = $this->parseAuthorization();
+            [$username, $token] = Authorization::parseAuthorization();
 
             if (!$this->provider->revokeToken($username, $token)) {
                 throw SsoException::revokeTokenFailed();
@@ -323,7 +323,7 @@ class Server
                 throw ContextualSsoException::updateContextNotSupported();
             }
 
-            [$username,] = $this->parseAuthorization();
+            [$username,] = Authorization::parseAuthorization();
 
             $context = $_POST['context'] ?? [];
 
@@ -354,63 +354,6 @@ class Server
         if (!$this->provider->validateCredentials($this->clientSecret, $this->clientToken)) {
             throw SsoException::clientCredentialsInvalid();
         }
-    }
-
-    protected function parsePostAuthorization(): array
-    {
-        $authorization = $_POST['authorization'] ?? null;
-
-        return $this->parseAuthorization($authorization);
-    }
-
-    protected function parseAuthorization(?string $authorization = null): array
-    {
-        $authorizationPassed = $authorization !== null;
-
-        if ($authorization === null) {
-            $authorization = $this->getAuthorizationFromHeader();
-        }
-
-        $authorizationType = null;
-
-        if (substr($authorization, 0, 5) === 'Basic') {
-            $authorizationType = 'basic';
-        } elseif (substr($authorization, 0, 6) === 'Bearer') {
-            $authorizationType = 'bearer';
-        } elseif (!$authorizationPassed) {
-            throw SsoException::invalidAuthorizationHeader();
-        }
-
-        $authorization = str_ireplace(['Basic ', 'Bearer '], '', $authorization);
-
-        $authorizationDecoded = base64_decode($authorization);
-
-        $authorizationParts = explode(':', $authorizationDecoded);
-        if (count($authorizationParts) !== 2) {
-            throw SsoException::invalidAuthorizationHeader();
-        }
-
-        if ($authorizationType === 'basic' && !$this->provider->loginUser(...$authorizationParts)) {
-            throw SsoException::loginFailed();
-        } elseif ($authorizationType === 'bearer' && !$this->provider->validateToken(...$authorizationParts)) {
-            throw SsoException::validateTokenFailed();
-        }
-
-        return $authorizationParts;
-    }
-
-    /**
-     * @throws SsoException
-     */
-    protected function getAuthorizationFromHeader(): string
-    {
-        $authorization = $this->headers['Authorization'] ?? null;
-
-        if ($authorization === null) {
-            throw SsoException::noAuthorizationHeader();
-        }
-
-        return $authorization;
     }
 
     protected function successResponse(string $call, array $data = [], array $metadata = []): Response

@@ -98,6 +98,16 @@ class Response
         return $this->errorCode;
     }
 
+    public function isSuccess(): bool
+    {
+        return $this->status === ResponseStatus::STATUS_SUCCESS;
+    }
+
+    public function isError(): bool
+    {
+        return $this->status === ResponseStatus::STATUS_ERROR;
+    }
+
     public function toJson(): string
     {
         $data = [
@@ -107,16 +117,6 @@ class Response
         ];
 
         return json_encode($data);
-    }
-
-    public function isSuccess(): bool
-    {
-        return $this->status === ResponseStatus::STATUS_SUCCESS;
-    }
-
-    public function isError(): bool
-    {
-        return $this->status === ResponseStatus::STATUS_ERROR;
     }
 
     public static function createFromArray(array $array): self

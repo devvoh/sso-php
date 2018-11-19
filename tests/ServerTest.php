@@ -205,15 +205,15 @@ class ServerTest extends \PHPUnit\Framework\TestCase
 
     public function testValidateTokenReturnsErrorOnInvalidToken()
     {
-        $_SERVER['HTTP_AUTHORIZATION'] = 'Basic ' . base64_encode('user:nope');
+        $_SERVER['HTTP_AUTHORIZATION'] = 'Bearer ' . base64_encode('user:nope');
 
         $server = new Server($provider = new TestProvider());
 
         $response = $server->validateToken();
 
         self::assertTrue($response->isError());
-        self::assertSame('Login failed', $response->getErrorMessage());
-        self::assertSame(SsoException::LOGIN_FAILED, $response->getErrorCode());
+        self::assertSame('Token validation failed', $response->getErrorMessage());
+        self::assertSame(SsoException::VALIDATE_TOKEN_FAILED, $response->getErrorCode());
     }
 
     public function testRevokeToken()
