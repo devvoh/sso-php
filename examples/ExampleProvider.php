@@ -6,12 +6,6 @@ use SsoPhp\Provider\ProviderInterface;
 class ExampleProvider implements ProviderInterface, ContextualProviderInterface
 {
     /** @var string */
-    protected $clientSecret;
-
-    /** @var string */
-    protected $clientToken;
-
-    /** @var string */
     protected $tokenStorageFile = __DIR__ . "/token_storage.json";
 
     /** @var string */
@@ -41,16 +35,6 @@ class ExampleProvider implements ProviderInterface, ContextualProviderInterface
     public function __destruct()
     {
         $this->saveStorage();
-    }
-
-    public function setClientSecret(string $clientSecret): void
-    {
-        $this->clientSecret = $clientSecret;
-    }
-
-    public function setClientToken(string $clientToken): void
-    {
-        $this->clientToken = $clientToken;
     }
 
     public function validateCredentials(string $clientSecret, string $clientToken): bool
