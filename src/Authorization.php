@@ -3,7 +3,6 @@
 namespace SsoPhp;
 
 use SsoPhp\Exceptions\SsoException;
-use SsoPhp\Provider\ProviderInterface;
 
 class Authorization
 {
@@ -26,25 +25,21 @@ class Authorization
         ));
     }
 
-    public static function parsePostAuthorization(): array
+    public static function parseAuthorizationFromHeader(): array
     {
-        $authorization = $_POST['authorization'] ?? null;
+        $headers = getallheaders();
 
-        return self::parseAuthorization($authorization);
-    }
-
-    public static function parseAuthorization(?string $authorization = null): array
-    {
-        $authorizationPassed = $authorization !== null;
+        $authorization = $headers['Authorization'] ?? null;
 
         if ($authorization === null) {
-            $authorization = self::getAuthorizationFromHeader();
+            throw SsoException::noAuthorizationHeader();
         }
 
-        if (!$authorizationPassed && self::getTypeFromAuthorization($authorization) === null) {
-            throw SsoException::invalidAuthorizationHeader();
-        }
+        return self::parseAuthorizationString($authorization);
+    }
 
+    public static function parseAuthorizationString(string $authorization): array
+    {
         $authorization = str_ireplace(['Basic ', 'Bearer '], '', $authorization);
 
         $authorizationDecoded = base64_decode($authorization);
@@ -57,7 +52,7 @@ class Authorization
         return $authorizationParts;
     }
 
-    public static function getTypeFromAuthorization(?string $authorization): ?string
+    public static function getTypeFromAuthorization(string $authorization): ?string
     {
         if (substr($authorization, 0, 5) === 'Basic') {
             return 'basic';
@@ -66,21 +61,5 @@ class Authorization
         }
 
         return null;
-    }
-
-    /**
-     * @throws SsoException
-     */
-    protected static function getAuthorizationFromHeader(): string
-    {
-        $headers = getallheaders();
-
-        $authorization = $headers['Authorization'] ?? null;
-
-        if ($authorization === null) {
-            throw SsoException::noAuthorizationHeader();
-        }
-
-        return $authorization;
     }
 }

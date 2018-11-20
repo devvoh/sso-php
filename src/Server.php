@@ -70,7 +70,14 @@ class Server
         try {
             $this->validateCredentials();
 
-            [$username, $password] = Authorization::parsePostAuthorization();
+            /** @var string|null $authorization */
+            $authorization = $_POST['authorization'] ?? null;
+
+            if ($authorization === null) {
+                throw SsoException::noAuthorizationHeader();
+            }
+
+            [$username, $password] = Authorization::parseAuthorizationString($authorization);
 
             if (!$this->provider->registerUser($username, $password)) {
                 throw SsoException::registerFailed();
@@ -127,7 +134,7 @@ class Server
         try {
             $this->validateCredentials();
 
-            [$username, $password] = Authorization::parseAuthorization();
+            [$username, $password] = Authorization::parseAuthorizationFromHeader();
 
             if (!$this->provider->loginUser($username, $password)) {
                 throw SsoException::loginFailed();
@@ -158,7 +165,7 @@ class Server
         try {
             $this->validateCredentials();
 
-            [$username, $token] = Authorization::parseAuthorization();
+            [$username, $token] = Authorization::parseAuthorizationFromHeader();
 
             if (!$this->provider->validateToken($username, $token)) {
                 throw SsoException::validateTokenFailed();
@@ -187,7 +194,7 @@ class Server
         try {
             $this->validateCredentials();
 
-            [$username, $token] = Authorization::parseAuthorization();
+            [$username, $token] = Authorization::parseAuthorizationFromHeader();
 
             if (!$this->provider->revokeToken($username, $token)) {
                 throw SsoException::revokeTokenFailed();
@@ -323,7 +330,7 @@ class Server
                 throw ContextualSsoException::updateContextNotSupported();
             }
 
-            [$username,] = Authorization::parseAuthorization();
+            [$username,] = Authorization::parseAuthorizationFromHeader();
 
             $context = $_POST['context'] ?? [];
 
