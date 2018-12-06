@@ -40,8 +40,8 @@ class Server
 
         $this->headers = getallheaders();
 
-        $this->clientSecret = $this->headers['Sso-Php-Client-Secret'] ?? null;
-        $this->clientToken = $this->headers['Sso-Php-Client-Token'] ?? null;
+        $this->clientSecret = $this->headers['SsoPhp-Client-Secret'] ?? '';
+        $this->clientToken = $this->headers['SsoPhp-Client-Token'] ?? '';
     }
 
     public function connect(): Response

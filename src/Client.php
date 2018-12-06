@@ -168,8 +168,8 @@ class Client
             $curlRequest->setOption($name, $value);
         }
 
-        $headers["Client-Secret"] = $this->clientSecret;
-        $headers["Client-Token"] = $this->clientToken;
+        $headers["SsoPhp-Client-Secret"] = $this->clientSecret;
+        $headers["SsoPhp-Client-Token"] = $this->clientToken;
 
         $headersBuilt = [];
         foreach ($headers as $key => $value) {
