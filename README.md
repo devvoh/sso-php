@@ -1,6 +1,13 @@
 # SSO-PHP
 Sso-php is a minimalist single sign-on client/server written in PHP.
 
+## What is and isn't it?
+Sso-php is a library aimed at helping you set up an SSO system for yourself. This includes both the server-side and
+the client-side.
+
+This library will not help you integrate into existing SSO offerings, unless it happens to be built
+with Sso-php.
+
 ## Requirements
 
 - PHP 7.1+
@@ -12,18 +19,3 @@ Sso-php is a minimalist single sign-on client/server written in PHP.
 sso-php can be installed by using [Composer](http://getcomposer.org/). Simply run:
 
 `composer require devvoh/sso-php`
-
-## Information
-
-The sso-php package should be installed on whatever account management application you're building. 
-It should support the requests the client will send.
-
-It's possible to use routing for this (`http://server.dev/sso/connect`, `http://server.dev/sso/login`, etc.) or a GET parameter 
-(`http://server.dev/sso.php?action=connect`, `http://server.dev/sso.php?action=login`).
-
-Most of the functionality specific for your situation will need to be provided in the form of an implementation of 
-`\SsoPhp\Provider\ProviderInterface`. There's an example provider, server and client in `/examples`.
-
-## Usage - General
-
-So out of date it needs to be rewritten.

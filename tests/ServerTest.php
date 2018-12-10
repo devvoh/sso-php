@@ -2,7 +2,8 @@
 
 namespace SsoPhp\Tests;
 
-use SsoPhp\Exceptions\SsoException;
+use SsoPhp\Provider\ProviderInterface;
+use SsoPhp\Response\ResponseErrors;
 use SsoPhp\Server;
 
 class ServerTest extends \PHPUnit\Framework\TestCase
@@ -11,15 +12,12 @@ class ServerTest extends \PHPUnit\Framework\TestCase
     {
         $_POST = [];
 
-        $_SERVER['HTTP_SSO_PHP_CLIENT_SECRET'] = 'secret';
-        $_SERVER['HTTP_SSO_PHP_CLIENT_TOKEN'] = 'token';
-
         parent::setUp();
     }
 
     public function testConnectSuccessfully()
     {
-        $server = new Server($provider = new TestProvider());
+        $server = $this->createNewServerWithSpecificCredentials('secret', 'token');
 
         $response = $server->connect();
 
@@ -34,88 +32,85 @@ class ServerTest extends \PHPUnit\Framework\TestCase
 
     public function testConnectUnsuccessfully()
     {
-        $_SERVER['HTTP_SSO_PHP_CLIENT_SECRET'] = 'nope';
-        $_SERVER['HTTP_SSO_PHP_CLIENT_TOKEN'] = 'seriously nope';
-
-        $server = new Server($provider = new TestProvider());
+        $server = $this->createNewServerWithSpecificCredentials('nope', 'seriously nope');
 
         $response = $server->connect();
 
         self::assertTrue($response->isError());
         self::assertSame('connect', $response->getCall());
         self::assertSame('Client credentials invalid', $response->getErrorMessage());
-        self::assertSame(SsoException::CLIENT_CREDENTIALS_INVALID, $response->getErrorCode());
+        self::assertSame(ResponseErrors::CLIENT_CREDENTIALS_INVALID, $response->getErrorCode());
     }
 
-    public function testRegisterSuccessfully()
+    public function testRegisterUserSuccessfully()
     {
-        $server = new Server($provider = new TestProvider());
+        $server = $this->createNewServerWithSpecificCredentials('secret', 'token', $provider = new TestProvider());
 
         self::assertCount(1, $provider->users);
 
         $_POST['authorization'] = base64_encode('new_user:pass');
 
-        $response = $server->register();
+        $response = $server->registerUser();
 
         self::assertTrue($response->isSuccess());
-        self::assertSame('register', $response->getCall());
+        self::assertSame('registerUser', $response->getCall());
         self::assertCount(2, $provider->users);
         self::assertArrayHasKey('new_user', $provider->users);
         self::assertSame('pass', $provider->users['new_user']['password']);
     }
 
-    public function testRegisterFailsIfNoAuthorizationInPost()
+    public function testRegisterUserFailsIfNoAuthorizationInPost()
     {
-        $server = new Server($provider = new TestProvider());
+        $server = $this->createNewServerWithSpecificCredentials('secret', 'token', $provider = new TestProvider());
 
         self::assertCount(1, $provider->users);
 
-        $response = $server->register();
+        $response = $server->registerUser();
 
         self::assertTrue($response->isError());
-        self::assertSame('register', $response->getCall());
+        self::assertSame('registerUser', $response->getCall());
         self::assertCount(1, $provider->users);
         self::assertSame('No authorization', $response->getErrorMessage());
-        self::assertSame(SsoException::NO_AUTHORIZATION_HEADER, $response->getErrorCode());
+        self::assertSame(ResponseErrors::NO_AUTHORIZATION_HEADER, $response->getErrorCode());
     }
 
-    public function testRegisterFailsIfAuthorizationInvalid()
+    public function testRegisterUserFailsIfAuthorizationInvalid()
     {
-        $server = new Server($provider = new TestProvider());
+        $server = $this->createNewServerWithSpecificCredentials('secret', 'token', $provider = new TestProvider());
 
         self::assertCount(1, $provider->users);
 
         $_POST['authorization'] = base64_encode('only_a_user');
 
-        $response = $server->register();
+        $response = $server->registerUser();
 
         self::assertTrue($response->isError());
-        self::assertSame('register', $response->getCall());
+        self::assertSame('registerUser', $response->getCall());
         self::assertCount(1, $provider->users);
         self::assertSame('Invalid authorization', $response->getErrorMessage());
-        self::assertSame(SsoException::INVALID_AUTHORIZATION_HEADER, $response->getErrorCode());
+        self::assertSame(ResponseErrors::INVALID_AUTHORIZATION_HEADER, $response->getErrorCode());
     }
 
-    public function testRegisterFailsForAlreadyExistingUser()
+    public function testRegisterUserFailsForAlreadyExistingUser()
     {
-        $server = new Server($provider = new TestProvider());
+        $server = $this->createNewServerWithSpecificCredentials('secret', 'token', $provider = new TestProvider());
 
         self::assertCount(1, $provider->users);
 
         $_POST['authorization'] = base64_encode('user:pass');
 
-        $response = $server->register();
+        $response = $server->registerUser();
 
         self::assertTrue($response->isError());
-        self::assertSame('register', $response->getCall());
+        self::assertSame('registerUser', $response->getCall());
         self::assertCount(1, $provider->users);
-        self::assertSame('Register failed', $response->getErrorMessage());
-        self::assertSame(SsoException::REGISTER_FAILED, $response->getErrorCode());
+        self::assertSame('Register user failed', $response->getErrorMessage());
+        self::assertSame(ResponseErrors::REGISTER_USER_FAILED, $response->getErrorCode());
     }
 
     public function testDeleteUserWorks()
     {
-        $server = new Server($provider = new TestProvider());
+        $server = $this->createNewServerWithSpecificCredentials('secret', 'token', $provider = new TestProvider());
 
         $provider->users['deletable'] = ['yup'];
 
@@ -135,7 +130,7 @@ class ServerTest extends \PHPUnit\Framework\TestCase
 
     public function testDeleteUserDoesntWorkWithoutUsernameInPost()
     {
-        $server = new Server($provider = new TestProvider());
+        $server = $this->createNewServerWithSpecificCredentials('secret', 'token', $provider = new TestProvider());
 
         $response = $server->deleteUser();
 
@@ -143,16 +138,16 @@ class ServerTest extends \PHPUnit\Framework\TestCase
         self::assertSame('deleteUser', $response->getCall());
         self::assertCount(1, $provider->users);
         self::assertSame('Delete user failed', $response->getErrorMessage());
-        self::assertSame(SsoException::DELETE_USER_FAILED, $response->getErrorCode());
+        self::assertSame(ResponseErrors::DELETE_USER_FAILED, $response->getErrorCode());
     }
 
     public function testLoginUserWorks()
     {
         $_SERVER['HTTP_AUTHORIZATION'] = 'Basic ' . base64_encode('user:pass');
 
-        $server = new Server($provider = new TestProvider());
+        $server = $this->createNewServerWithSpecificCredentials('secret', 'token');
 
-        $response = $server->login();
+        $response = $server->loginUser();
 
         self::assertTrue($response->isSuccess());
         self::assertNotNull($response->getFromData('token'));
@@ -162,41 +157,41 @@ class ServerTest extends \PHPUnit\Framework\TestCase
     {
         $_SERVER['HTTP_AUTHORIZATION'] = 'Basic ' . base64_encode('user:nope');
 
-        $server = new Server($provider = new TestProvider());
+        $server = $this->createNewServerWithSpecificCredentials('secret', 'token');
 
-        $response = $server->login();
+        $response = $server->loginUser();
 
         self::assertTrue($response->isError());
-        self::assertSame('Login failed', $response->getErrorMessage());
-        self::assertSame(SsoException::LOGIN_FAILED, $response->getErrorCode());
+        self::assertSame('Login user failed', $response->getErrorMessage());
+        self::assertSame(ResponseErrors::LOGIN_USER_FAILED, $response->getErrorCode());
     }
 
     public function testLoginUserReturnsErrorForUnknownUsername()
     {
         $_SERVER['HTTP_AUTHORIZATION'] = 'Basic ' . base64_encode('nope:nope');
 
-        $server = new Server($provider = new TestProvider());
+        $server = $this->createNewServerWithSpecificCredentials('secret', 'token');
 
-        $response = $server->login();
+        $response = $server->loginUser();
 
         self::assertTrue($response->isError());
-        self::assertSame('Login failed', $response->getErrorMessage());
-        self::assertSame(SsoException::LOGIN_FAILED, $response->getErrorCode());
+        self::assertSame('Login user failed', $response->getErrorMessage());
+        self::assertSame(ResponseErrors::LOGIN_USER_FAILED, $response->getErrorCode());
     }
 
     public function testValidateToken()
     {
         $_SERVER['HTTP_AUTHORIZATION'] = 'Basic ' . base64_encode('user:pass');
 
-        $server = new Server($provider = new TestProvider());
+        $server = $this->createNewServerWithSpecificCredentials('secret', 'token', $provider = new TestProvider());
 
-        $response = $server->login();
+        $response = $server->loginUser();
+
+        self::assertTrue($response->isSuccess());
 
         $token = $response->getFromData('token');
 
         $_SERVER['HTTP_AUTHORIZATION'] = 'Bearer ' . base64_encode('user:' . $token);
-
-        $server = new Server($provider);
 
         $response = $server->validateToken();
 
@@ -207,28 +202,26 @@ class ServerTest extends \PHPUnit\Framework\TestCase
     {
         $_SERVER['HTTP_AUTHORIZATION'] = 'Bearer ' . base64_encode('user:nope');
 
-        $server = new Server($provider = new TestProvider());
+        $server = $this->createNewServerWithSpecificCredentials('secret', 'token', $provider = new TestProvider());
 
         $response = $server->validateToken();
 
         self::assertTrue($response->isError());
         self::assertSame('Token validation failed', $response->getErrorMessage());
-        self::assertSame(SsoException::VALIDATE_TOKEN_FAILED, $response->getErrorCode());
+        self::assertSame(ResponseErrors::VALIDATE_TOKEN_FAILED, $response->getErrorCode());
     }
 
     public function testRevokeToken()
     {
         $_SERVER['HTTP_AUTHORIZATION'] = 'Basic ' . base64_encode('user:pass');
 
-        $server = new Server($provider = new TestProvider());
+        $server = $this->createNewServerWithSpecificCredentials('secret', 'token', $provider = new TestProvider());
 
-        $response = $server->login();
+        $response = $server->loginUser();
 
         $token = $response->getFromData('token');
 
         $_SERVER['HTTP_AUTHORIZATION'] = 'Bearer ' . base64_encode('user:' . $token);
-
-        $server = new Server($provider);
 
         $response = $server->validateToken();
 
@@ -245,7 +238,7 @@ class ServerTest extends \PHPUnit\Framework\TestCase
 
     public function testGenerateRegisterUrl()
     {
-        $server = new Server($provider = new TestProvider());
+        $server = $this->createNewServerWithSpecificCredentials('secret', 'token');
 
         $response = $server->generateRegisterUrl();
 
@@ -254,7 +247,7 @@ class ServerTest extends \PHPUnit\Framework\TestCase
 
     public function testGenerateLoginUrl()
     {
-        $server = new Server($provider = new TestProvider());
+        $server = $this->createNewServerWithSpecificCredentials('secret', 'token');
 
         $response = $server->generateLoginUrl();
 
@@ -263,17 +256,17 @@ class ServerTest extends \PHPUnit\Framework\TestCase
 
     public function testRegisterWithContext()
     {
-        $server = new Server($provider = new TestProvider());
+        $server = $this->createNewServerWithSpecificCredentials('secret', 'token', $provider = new TestProvider());
 
         self::assertCount(1, $provider->users);
 
         $_POST['authorization'] = base64_encode('new_user:pass');
         $_POST['context'] = $context = ['context' => 'stuff'];
 
-        $response = $server->registerWithContext();
+        $response = $server->registerUserWithContext();
 
         self::assertTrue($response->isSuccess());
-        self::assertSame('registerWithContext', $response->getCall());
+        self::assertSame('registerUserWithContext', $response->getCall());
         self::assertCount(2, $provider->users);
         self::assertArrayHasKey('new_user', $provider->users);
         self::assertSame('pass', $provider->users['new_user']['password']);
@@ -284,26 +277,33 @@ class ServerTest extends \PHPUnit\Framework\TestCase
     {
         $_SERVER['HTTP_AUTHORIZATION'] = 'Bearer ' . base64_encode('user:token');
 
-        $server = new Server($provider = new TestProvider());
+        $server = $this->createNewServerWithSpecificCredentials('secret', 'token', $provider = new TestProvider());
 
         self::assertCount(1, $provider->users);
 
         $_POST['authorization'] = base64_encode('user:token');
         $_POST['context'] = $context = ['context' => 'stuff'];
 
-        $response = $server->updateContext();
+        $response = $server->updateUserContext();
 
         self::assertTrue($response->isSuccess());
         self::assertSame($context, $response->getFromData('context'));
     }
 
-    private function liberateValue(string $name, $object)
-    {
-        $reflection = new ReflectionClass($object);
+    private function createNewServerWithSpecificCredentials(
+        string $clientSecret = null,
+        string $clientToken = null,
+        ProviderInterface $provider = null
+    ): Server {
+        $server = new class ($provider ?? new TestProvider()) extends Server {
+            public function setCredentials(?string $clientSecret, ?string $clientToken): void {
+                $this->clientSecret = $clientSecret;
+                $this->clientToken = $clientToken;
+            }
+        };
 
-        $reflectionProperty = $reflection->getProperty($name);
-        $reflectionProperty->setAccessible(true);
+        $server->setCredentials($clientSecret, $clientToken);
 
-        return $reflectionProperty->getValue($object);
+        return $server;
     }
 }

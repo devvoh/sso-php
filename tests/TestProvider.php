@@ -36,7 +36,7 @@ class TestProvider implements ProviderInterface, ContextualProviderInterface, Ex
         return true;
     }
 
-    public function updateContext(string $username, array $context): bool
+    public function updateUserContext(string $username, array $context): bool
     {
         if (!isset($this->users[$username])) {
             return false;

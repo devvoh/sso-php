@@ -24,17 +24,14 @@ switch ($action) {
     case 'connect':
         echo $server->connect()->toJson();
         return;
-    case 'register':
-        echo $server->register()->toJson();
+    case 'registerUser':
+        echo $server->registerUser()->toJson();
         return;
     case 'deleteUser':
         echo $server->deleteUser()->toJson();
         return;
-    case 'registerWithContext':
-        echo $server->registerWithContext()->toJson();
-        return;
-    case 'login':
-        echo $server->login()->toJson();
+    case 'loginUser':
+        echo $server->loginUser()->toJson();
         return;
     case 'validateToken':
         echo $server->validateToken()->toJson();
@@ -42,8 +39,11 @@ switch ($action) {
     case 'revokeToken':
         echo $server->revokeToken()->toJson();
         return;
-    case 'updateContext':
-        echo $server->updateContext()->toJson();
+    case 'registerUserWithContext':
+        echo $server->registerUserWithContext()->toJson();
+        return;
+    case 'updateUserContext':
+        echo $server->updateUserContext()->toJson();
         return;
 }
 

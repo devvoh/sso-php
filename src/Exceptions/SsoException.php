@@ -2,24 +2,15 @@
 
 namespace SsoPhp\Exceptions;
 
+use SsoPhp\Response\ResponseErrors;
+
 class SsoException extends AbstractException
 {
-    public const INVALID_STATUS_FOR_RESPONSE = 100;
-    public const CLIENT_CREDENTIALS_INVALID = 101;
-    public const NO_AUTHORIZATION_HEADER = 102;
-    public const INVALID_AUTHORIZATION_HEADER = 103;
-    public const REGISTER_FAILED = 104;
-    public const DELETE_USER_FAILED = 105;
-    public const LOGIN_FAILED = 106;
-    public const VALIDATE_TOKEN_FAILED = 107;
-    public const REVOKE_TOKEN_FAILED = 109;
-    public const SECURE_SERVER_URL_REQUIRED = 110;
-
     public static function invalidStatusForResponse(string $status): self
     {
         return new self(
             sprintf('Invalid status for response: %s', $status),
-            self::INVALID_STATUS_FOR_RESPONSE
+            ResponseErrors::INVALID_STATUS_FOR_RESPONSE
         );
     }
 
@@ -27,7 +18,7 @@ class SsoException extends AbstractException
     {
         return new self(
             'Client credentials invalid',
-            self::CLIENT_CREDENTIALS_INVALID
+            ResponseErrors::CLIENT_CREDENTIALS_INVALID
         );
     }
 
@@ -35,7 +26,7 @@ class SsoException extends AbstractException
     {
         return new self(
             'No authorization',
-            self::NO_AUTHORIZATION_HEADER
+            ResponseErrors::NO_AUTHORIZATION_HEADER
         );
     }
 
@@ -43,15 +34,15 @@ class SsoException extends AbstractException
     {
         return new self(
             'Invalid authorization',
-            self::INVALID_AUTHORIZATION_HEADER
+            ResponseErrors::INVALID_AUTHORIZATION_HEADER
         );
     }
 
-    public static function registerFailed(): self
+    public static function registerUserFailed(): self
     {
         return new self(
-            'Register failed',
-            self::REGISTER_FAILED
+            'Register user failed',
+            ResponseErrors::REGISTER_USER_FAILED
         );
     }
 
@@ -59,15 +50,15 @@ class SsoException extends AbstractException
     {
         return new self(
             'Delete user failed',
-            self::DELETE_USER_FAILED
+            ResponseErrors::DELETE_USER_FAILED
         );
     }
 
-    public static function loginFailed(): self
+    public static function loginUserFailed(): self
     {
         return new self(
-            'Login failed',
-            self::LOGIN_FAILED
+            'Login user failed',
+            ResponseErrors::LOGIN_USER_FAILED
         );
     }
 
@@ -75,7 +66,7 @@ class SsoException extends AbstractException
     {
         return new self(
             'Token validation failed',
-            self::VALIDATE_TOKEN_FAILED
+            ResponseErrors::VALIDATE_TOKEN_FAILED
         );
     }
 
@@ -83,7 +74,7 @@ class SsoException extends AbstractException
     {
         return new self(
             'Token revocation failed',
-            self::REVOKE_TOKEN_FAILED
+            ResponseErrors::REVOKE_TOKEN_FAILED
         );
     }
 
@@ -91,7 +82,7 @@ class SsoException extends AbstractException
     {
         return new self(
             'Secure server url required',
-            self::SECURE_SERVER_URL_REQUIRED
+            ResponseErrors::SECURE_SERVER_URL_REQUIRED
         );
     }
 }

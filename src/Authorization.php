@@ -25,19 +25,38 @@ class Authorization
         ));
     }
 
+    /**
+     * @return string[]
+     */
     public static function parseAuthorizationFromHeader(): array
     {
-        $headers = getallheaders();
+    }
 
-        $authorization = $headers['Authorization'] ?? null;
+    public static function parseBasicAuthorizationStringFromHeader(): array
+    {
+        $authorization = self::getAuthorizationStringFromHeader();
 
-        if ($authorization === null) {
+        if (!self::isBasicAuthorization($authorization)) {
             throw SsoException::noAuthorizationHeader();
         }
 
         return self::parseAuthorizationString($authorization);
     }
 
+    public static function parseBearerAuthorizationStringFromHeader(): array
+    {
+        $authorization = self::getAuthorizationStringFromHeader();
+
+        if (!self::isBearerAuthorization($authorization)) {
+            throw SsoException::noAuthorizationHeader();
+        }
+
+        return self::parseAuthorizationString($authorization);
+    }
+
+    /**
+     * @return string[]
+     */
     public static function parseAuthorizationString(string $authorization): array
     {
         $authorization = str_ireplace(['Basic ', 'Bearer '], '', $authorization);
@@ -52,7 +71,30 @@ class Authorization
         return $authorizationParts;
     }
 
-    public static function getTypeFromAuthorization(string $authorization): ?string
+    public static function isBasicAuthorization(string $authorization): bool
+    {
+        return self::getTypeFromAuthorization($authorization) === 'basic';
+    }
+
+    public static function isBearerAuthorization(string $authorization): bool
+    {
+        return self::getTypeFromAuthorization($authorization) === 'bearer';
+    }
+
+    private static function getAuthorizationStringFromHeader(): string
+    {
+        $headers = getallheaders();
+
+        $authorization = $headers['Authorization'] ?? null;
+
+        if ($authorization === null) {
+            throw SsoException::noAuthorizationHeader();
+        }
+
+        return $authorization;
+    }
+
+    private static function getTypeFromAuthorization(string $authorization): ?string
     {
         if (substr($authorization, 0, 5) === 'Basic') {
             return 'basic';

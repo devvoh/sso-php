@@ -65,9 +65,9 @@ class Client
         return $this->makeRequest("GET", "connect");
     }
 
-    public function register(string $username, string $password): Response
+    public function registerUser(string $username, string $password): Response
     {
-        return $this->makeRequest("POST", "register", [], [
+        return $this->makeRequest("POST", "registerUser", [], [
             'authorization' => Authorization::buildAuthorization($username, $password),
         ]);
     }
@@ -79,9 +79,9 @@ class Client
         ]);
     }
 
-    public function login(string $username, string $password): Response
+    public function loginUser(string $username, string $password): Response
     {
-        return $this->makeRequest("POST", "login", [
+        return $this->makeRequest("POST", "loginUser", [
             "Authorization" => Authorization::buildBasicAuthorization($username, $password),
         ]);
     }
@@ -100,9 +100,9 @@ class Client
         ]);
     }
 
-    public function registerWithContext(string $username, string $password, array $context = []): Response
+    public function registerUserWithContext(string $username, string $password, array $context = []): Response
     {
-        $response = $this->makeRequest("POST", "registerWithContext", [], [
+        $response = $this->makeRequest("POST", "registerUserWithContext", [], [
             'authorization' => Authorization::buildAuthorization($username, $password),
             'context' => $context,
         ]);
@@ -110,11 +110,11 @@ class Client
         return $response;
     }
 
-    public function updateContext(string $username, string $token, array $context): Response
+    public function updateUserContext(string $username, string $token, array $context): Response
     {
         $response = $this->makeRequest(
             "POST",
-            "updateContext",
+            "updateUserContext",
             [
                 "Authorization" => Authorization::buildBearerAuthorization($username, $token),
             ],

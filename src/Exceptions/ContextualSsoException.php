@@ -2,42 +2,39 @@
 
 namespace SsoPhp\Exceptions;
 
+use SsoPhp\Response\ResponseErrors;
+
 class ContextualSsoException extends AbstractException
 {
-    public const UPDATE_CONTEXT_FAILED = 500;
-    public const UPDATE_CONTEXT_NOT_SUPPORTED = 501;
-    public const REGISTER_WITH_CONTEXT_FAILED = 502;
-    public const REGISTER_WITH_CONTEXT_NOT_SUPPORTED = 503;
-
-    public static function updateContextFailed(): self
+    public static function updateUserContextFailed(): self
     {
         return new self(
-            'Update context failed',
-            self::UPDATE_CONTEXT_FAILED
+            'Update user context failed',
+            ResponseErrors::UPDATE_USER_CONTEXT_FAILED
         );
     }
 
-    public static function updateContextNotSupported(): self
+    public static function updateUserContextNotSupported(): self
     {
         return new self(
-            'Update context not supported by provider',
-            self::UPDATE_CONTEXT_NOT_SUPPORTED
+            'Update user context not supported by provider',
+            ResponseErrors::UPDATE_USER_CONTEXT_NOT_SUPPORTED
         );
     }
 
-    public static function registerWithContextFailed(): self
+    public static function registerUserWithContextFailed(): self
     {
         return new self(
-            'Register with context failed',
-            self::REGISTER_WITH_CONTEXT_FAILED
+            'Register user with context failed',
+            ResponseErrors::REGISTER_USER_WITH_CONTEXT_FAILED
         );
     }
 
-    public static function registerWithContextNotSupported(): self
+    public static function registerUserWithContextNotSupported(): self
     {
         return new self(
-            'Register with context not supported by provider',
-            self::REGISTER_WITH_CONTEXT_NOT_SUPPORTED
+            'Register user with context not supported by provider',
+            ResponseErrors::REGISTER_USER_WITH_CONTEXT_NOT_SUPPORTED
         );
     }
 }

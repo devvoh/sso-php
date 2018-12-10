@@ -38,10 +38,10 @@ class Server
     ) {
         $this->provider = $provider;
 
-        $this->headers = getallheaders();
+        $headers = getallheaders();
 
-        $this->clientSecret = $this->headers['SsoPhp-Client-Secret'] ?? '';
-        $this->clientToken = $this->headers['SsoPhp-Client-Token'] ?? '';
+        $this->clientSecret = $headers['SsoPhp-Client-Secret'] ?? '';
+        $this->clientToken = $headers['SsoPhp-Client-Token'] ?? '';
     }
 
     public function connect(): Response
@@ -65,7 +65,7 @@ class Server
         );
     }
 
-    public function register(): Response
+    public function registerUser(): Response
     {
         try {
             $this->validateCredentials();
@@ -80,19 +80,19 @@ class Server
             [$username, $password] = Authorization::parseAuthorizationString($authorization);
 
             if (!$this->provider->registerUser($username, $password)) {
-                throw SsoException::registerFailed();
+                throw SsoException::registerUserFailed();
             }
         } catch (AbstractException $e) {
             return $this->errorResponseFromException($e);
         }
 
         return $this->successResponse(
-            'register',
+            'registerUser',
             [
                 'username' => $username,
             ],
             $this->provider->getMetadataForCall(
-                'register',
+                'registerUser',
                 [
                     'username' => $username
                 ]
@@ -129,15 +129,15 @@ class Server
         );
     }
 
-    public function login(): Response
+    public function loginUser(): Response
     {
         try {
             $this->validateCredentials();
 
-            [$username, $password] = Authorization::parseAuthorizationFromHeader();
+            [$username, $password] = Authorization::parseBasicAuthorizationStringFromHeader();
 
             if (!$this->provider->loginUser($username, $password)) {
-                throw SsoException::loginFailed();
+                throw SsoException::loginUserFailed();
             }
         } catch (AbstractException $e) {
             return $this->errorResponseFromException($e);
@@ -146,13 +146,13 @@ class Server
         $token = $this->provider->generateToken($username);
 
         return $this->successResponse(
-            'login',
+            'loginUser',
             [
                 'username' => $username,
                 'token' => $token,
             ],
             $this->provider->getMetadataForCall(
-                'login',
+                'loginUser',
                 [
                     'username' => $username,
                 ]
@@ -165,7 +165,7 @@ class Server
         try {
             $this->validateCredentials();
 
-            [$username, $token] = Authorization::parseAuthorizationFromHeader();
+            [$username, $token] = Authorization::parseBearerAuthorizationStringFromHeader();
 
             if (!$this->provider->validateToken($username, $token)) {
                 throw SsoException::validateTokenFailed();
@@ -194,7 +194,7 @@ class Server
         try {
             $this->validateCredentials();
 
-            [$username, $token] = Authorization::parseAuthorizationFromHeader();
+            [$username, $token] = Authorization::parseBearerAuthorizationStringFromHeader();
 
             if (!$this->provider->revokeToken($username, $token)) {
                 throw SsoException::revokeTokenFailed();
@@ -204,12 +204,12 @@ class Server
         }
 
         return $this->successResponse(
-            'logout',
+            'revokeToken',
             [
                 'username' => $username,
             ],
             $this->provider->getMetadataForCall(
-                'logout',
+                'revokeToken',
                 [
                     'username' => $username,
                 ]
@@ -281,39 +281,39 @@ class Server
         );
     }
 
-    public function registerWithContext(): Response
+    public function registerUserWithContext(): Response
     {
         try {
             $this->validateCredentials();
 
             if (!($this->provider instanceof ContextualProviderInterface)) {
-                throw ContextualSsoException::registerWithContextNotSupported();
+                throw ContextualSsoException::registerUserWithContextNotSupported();
             }
 
-            $response = $this->register();
+            $response = $this->registerUser();
 
             if ($response->isError()) {
-                throw ContextualSsoException::registerWithContextFailed();
+                throw ContextualSsoException::registerUserWithContextFailed();
             }
 
             $username = $response->getFromData('username');
             $context = $_POST['context'] ?? [];
 
-            if (!$this->provider->updateContext($username, $context)) {
-                throw ContextualSsoException::registerWithContextFailed();
+            if (!$this->provider->updateUserContext($username, $context)) {
+                throw ContextualSsoException::registerUserWithContextFailed();
             }
         } catch (AbstractException $e) {
             return $this->errorResponseFromException($e);
         }
 
         return $this->successResponse(
-            'registerWithContext',
+            'registerUserWithContext',
             [
                 'username' => $username,
                 'context' => $context,
             ],
             $this->provider->getMetadataForCall(
-                'registerWithContext',
+                'registerUserWithContext',
                 [
                     'username' => $username
                 ]
@@ -321,34 +321,34 @@ class Server
         );
     }
 
-    public function updateContext(): Response
+    public function updateUserContext(): Response
     {
         try {
             $this->validateCredentials();
 
             if (!($this->provider instanceof ContextualProviderInterface)) {
-                throw ContextualSsoException::updateContextNotSupported();
+                throw ContextualSsoException::updateUserContextNotSupported();
             }
 
-            [$username,] = Authorization::parseAuthorizationFromHeader();
+            [$username,] = Authorization::parseBearerAuthorizationStringFromHeader();
 
             $context = $_POST['context'] ?? [];
 
-            if (!$this->provider->updateContext($username, $context)) {
-                throw ContextualSsoException::updateContextFailed();
+            if (!$this->provider->updateUserContext($username, $context)) {
+                throw ContextualSsoException::updateUserContextFailed();
             }
         } catch (AbstractException $e) {
             return $this->errorResponseFromException($e);
         }
 
         return $this->successResponse(
-            'updateContext',
+            'updateUserContext',
             [
                 'username' => $username,
                 'context' => $context,
             ],
             $this->provider->getMetadataForCall(
-                'updateContext',
+                'updateUserContext',
                 [
                     'username' => $username
                 ]

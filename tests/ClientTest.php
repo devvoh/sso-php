@@ -74,7 +74,7 @@ class ClientTest extends \PHPUnit\Framework\TestCase
 
         $this->assertSame('https://client.test/connect', $this->mockCurlRequest->getUrl());
         $this->assertSame(
-            ['Client-Secret: secret', 'Client-Token: token'],
+            ['SsoPhp-Client-Secret: secret', 'SsoPhp-Client-Token: token'],
             $this->mockCurlRequest->getOption(CURLOPT_HTTPHEADER)
         );
 
@@ -83,11 +83,11 @@ class ClientTest extends \PHPUnit\Framework\TestCase
 
     public function testRegister()
     {
-        $this->mockSsoClient->register('user', 'pass');
+        $this->mockSsoClient->registerUser('user', 'pass');
 
-        $this->assertSame('https://client.test/register', $this->mockCurlRequest->getUrl());
+        $this->assertSame('https://client.test/registerUser', $this->mockCurlRequest->getUrl());
         $this->assertSame(
-            ['Client-Secret: secret', 'Client-Token: token'],
+            ['SsoPhp-Client-Secret: secret', 'SsoPhp-Client-Token: token'],
             $this->mockCurlRequest->getOption(CURLOPT_HTTPHEADER)
         );
 
@@ -105,7 +105,7 @@ class ClientTest extends \PHPUnit\Framework\TestCase
 
         $this->assertSame('https://client.test/deleteUser', $this->mockCurlRequest->getUrl());
         $this->assertSame(
-            ['Client-Secret: secret', 'Client-Token: token'],
+            ['SsoPhp-Client-Secret: secret', 'SsoPhp-Client-Token: token'],
             $this->mockCurlRequest->getOption(CURLOPT_HTTPHEADER)
         );
 
@@ -119,14 +119,14 @@ class ClientTest extends \PHPUnit\Framework\TestCase
 
     public function testLogin()
     {
-        $this->mockSsoClient->login('user', 'pass');
+        $this->mockSsoClient->loginUser('user', 'pass');
 
-        $this->assertSame('https://client.test/login', $this->mockCurlRequest->getUrl());
+        $this->assertSame('https://client.test/loginUser', $this->mockCurlRequest->getUrl());
         $this->assertSame(
             [
                 'Authorization: Basic dXNlcjpwYXNz',
-                'Client-Secret: secret',
-                'Client-Token: token',
+                'SsoPhp-Client-Secret: secret',
+                'SsoPhp-Client-Token: token',
             ],
             $this->mockCurlRequest->getOption(CURLOPT_HTTPHEADER)
         );
@@ -142,8 +142,8 @@ class ClientTest extends \PHPUnit\Framework\TestCase
         $this->assertSame(
             [
                 'Authorization: Bearer dXNlcjp0b2tlbg==',
-                'Client-Secret: secret',
-                'Client-Token: token',
+                'SsoPhp-Client-Secret: secret',
+                'SsoPhp-Client-Token: token',
             ],
             $this->mockCurlRequest->getOption(CURLOPT_HTTPHEADER)
         );
@@ -159,8 +159,8 @@ class ClientTest extends \PHPUnit\Framework\TestCase
         $this->assertSame(
             [
                 'Authorization: Bearer dXNlcjp0b2tlbg==',
-                'Client-Secret: secret',
-                'Client-Token: token',
+                'SsoPhp-Client-Secret: secret',
+                'SsoPhp-Client-Token: token',
             ],
             $this->mockCurlRequest->getOption(CURLOPT_HTTPHEADER)
         );
@@ -168,17 +168,17 @@ class ClientTest extends \PHPUnit\Framework\TestCase
         self::assertTrue($this->mockCurlRequest->isPost());
     }
 
-    public function testRegisterWithContext()
+    public function testRegisterUserWithContext()
     {
-        $this->mockSsoClient->registerWithContext('user', 'pass', [
+        $this->mockSsoClient->registerUserWithContext('user', 'pass', [
             'context' => 'goes here yo',
         ]);
 
-        $this->assertSame('https://client.test/registerWithContext', $this->mockCurlRequest->getUrl());
+        $this->assertSame('https://client.test/registerUserWithContext', $this->mockCurlRequest->getUrl());
         $this->assertSame(
             [
-                'Client-Secret: secret',
-                'Client-Token: token',
+                'SsoPhp-Client-Secret: secret',
+                'SsoPhp-Client-Token: token',
             ],
             $this->mockCurlRequest->getOption(CURLOPT_HTTPHEADER)
         );
@@ -193,16 +193,16 @@ class ClientTest extends \PHPUnit\Framework\TestCase
 
     public function testUpdateContext()
     {
-        $this->mockSsoClient->updateContext('user', 'token', [
+        $this->mockSsoClient->updateUserContext('user', 'token', [
             'stuff' => 'this be new dawg',
         ]);
 
-        $this->assertSame('https://client.test/updateContext', $this->mockCurlRequest->getUrl());
+        $this->assertSame('https://client.test/updateUserContext', $this->mockCurlRequest->getUrl());
         $this->assertSame(
             [
                 'Authorization: Bearer dXNlcjp0b2tlbg==',
-                'Client-Secret: secret',
-                'Client-Token: token',
+                'SsoPhp-Client-Secret: secret',
+                'SsoPhp-Client-Token: token',
             ],
             $this->mockCurlRequest->getOption(CURLOPT_HTTPHEADER)
         );
@@ -222,8 +222,8 @@ class ClientTest extends \PHPUnit\Framework\TestCase
         $this->assertSame('https://client.test/generateRegisterUrl', $this->mockCurlRequest->getUrl());
         $this->assertSame(
             [
-                'Client-Secret: secret',
-                'Client-Token: token',
+                'SsoPhp-Client-Secret: secret',
+                'SsoPhp-Client-Token: token',
             ],
             $this->mockCurlRequest->getOption(CURLOPT_HTTPHEADER)
         );
@@ -238,8 +238,8 @@ class ClientTest extends \PHPUnit\Framework\TestCase
         $this->assertSame('https://client.test/generateLoginUrl', $this->mockCurlRequest->getUrl());
         $this->assertSame(
             [
-                'Client-Secret: secret',
-                'Client-Token: token',
+                'SsoPhp-Client-Secret: secret',
+                'SsoPhp-Client-Token: token',
             ],
             $this->mockCurlRequest->getOption(CURLOPT_HTTPHEADER)
         );

@@ -101,11 +101,10 @@ class ExampleProvider implements ProviderInterface, ContextualProviderInterface
         if ($user && $pass === $password) {
             return true;
         }
-
-        return true;
+        return false;
     }
 
-    public function updateContext(string $username, array $context): bool
+    public function updateUserContext(string $username, array $context): bool
     {
         $this->userStorage[$username]['context'] = $context;
 
@@ -116,7 +115,7 @@ class ExampleProvider implements ProviderInterface, ContextualProviderInterface
     {
         $tokenFromStorage = $this->tokenStorage[$username] ?? null;
 
-        return $tokenFromStorage == $token;
+        return $tokenFromStorage === $token;
     }
 
     public function revokeToken(string $username, string $token): bool
@@ -166,11 +165,12 @@ class ExampleProvider implements ProviderInterface, ContextualProviderInterface
     {
         // It's possible to generate metadata for specific contexts here
         switch ($call) {
-            case "login":
-            case "logout":
+            case "loginUser":
+            case "revokeToken":
             case "validateToken":
-            case "register":
-            case "updateContext":
+            case "registerUser":
+            case "registerUserWithContext":
+            case "updateUserContext":
                 return [
                     "username" => $data["username"],
                     "context" => $this->userStorage[$data["username"]]['context'] ?? [],

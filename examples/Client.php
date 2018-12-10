@@ -11,16 +11,16 @@ function write(string $msg): void
     echo $msg;
 }
 
-function writeln(string $msg): void
+function writeln(string $msg = null): void
 {
-    write($msg);
+    write($msg ?? "");
     write(PHP_EOL);
 }
 
 function writeresponse(string $msg): void
 {
     writeln('');
-    writeln('  ' . $msg);
+    writeln('  ↪ ' . $msg);
 }
 
 writeln("devvoh/sso-php example client");
@@ -65,19 +65,23 @@ write("Register new user? [y/N] ");
 $register = trim(fgets(STDIN));
 
 if (strtolower($register) === 'y') {
+    writeln();
+
     write("New username: ");
     $user = trim(fgets(STDIN));
 
     write("New password: ");
     $pass = trim(fgets(STDIN));
 
+    writeln();
+
     write("Register new user with context? [y/N] ");
     $registerWithContext = trim(fgets(STDIN));
 
     if (strtolower($registerWithContext) === 'y') {
-        $response = $client->registerWithContext($user, $pass, ['example' => 1]);
+        $response = $client->registerUserWithContext($user, $pass, ['example' => 1]);
     } else {
-        $response = $client->register($user, $pass);
+        $response = $client->registerUser($user, $pass);
     }
 
     if ($verbose) {
@@ -89,12 +93,13 @@ if (strtolower($register) === 'y') {
         exit(1);
     }
 
-    writeln('User registered.');
+    writeln("User registered.");
 }
 
-writeln(str_repeat('-', 80));
+writeln(str_repeat("-", 80));
 
 writeln("Log in now...");
+writeln();
 
 write("Username (user for example): ");
 $user = trim(fgets(STDIN));
@@ -102,9 +107,10 @@ $user = trim(fgets(STDIN));
 write("Password (pass for example): ");
 $pass = trim(fgets(STDIN));
 
-write("Logging in with {$user}:{$pass}@{$client->getServerUrl()}login... ");
+writeln();
+write("Logging in with {$user}:{$pass}@{$client->getServerUrl()}loginUser... ");
 
-$response = $client->login($user, $pass);
+$response = $client->loginUser($user, $pass);
 
 if ($verbose) {
     writeresponse($response->toJson());
@@ -141,26 +147,38 @@ writeln(str_repeat('-', 80));
 $currentContext = $response->getFromMetadata('context');
 
 if ($currentContext !== null) {
-    writeln("Hit enter to update the user's context...");
+    write("Current context: ");
+    writeln(json_encode($currentContext));
+    writeln();
+
+    write("Hit enter to update the user's context...");
     fgets(STDIN);
+    writeln();
 
-    $currentContext['example'] = (int)$currentContext['example'] + 1;
+    if (isset($currentContext['example'])) {
+        $currentContext['example'] = (int)$currentContext['example'] + 1;
+    } else {
+        $currentContext['example'] = 1;
+    }
 
-    $response = $client->updateContext($user, $token, $currentContext);
+    $response = $client->updateUserContext($user, $token, $currentContext);
+
+    if ($response->isError()) {
+        writeln("Could not update user context.");
+        exit(1);
+    } else {
+        write("Updated user context: ");
+        writeln(json_encode($response->getFromMetadata('context')));
+    }
 
     if ($verbose) {
         writeresponse($response->toJson());
     }
 
-    if ($response->isError()) {
-        writeln("Could not update user context.");
-        exit(1);
-    }
-
     writeln(str_repeat('-', 80));
 }
 
-writeln("Hit enter to log out. This is where you can check token_storage.json. The token will disappear after logging out...");
+write("Hit enter to log out. Now you can check token_storage.json. The token will disappear after logging out...");
 fgets(STDIN);
 
 write("Logging out ({$client->getServerUrl()}revokeToken)... ");
@@ -191,6 +209,13 @@ if ($verbose) {
 if ($response->isSuccess()) {
     writeln("Token was not revoked, this is bad.");
     exit(1);
+}
+
+if ($response->getErrorCode() !== SsoPhp\Response\ResponseErrors::VALIDATE_TOKEN_FAILED) {
+    writeln("Token invalid, but not for the right reason:");
+    writeln("  Message: " . $response->getErrorMessage());
+    writeln("     Code: " . $response->getErrorCode());
+    writeln();
 }
 
 writeln("Token invalidated, logged out.");
