@@ -10,17 +10,17 @@ class CurlRequest
     /**
      * @var string
      */
-    private $url;
+    protected $url;
 
     /**
      * @var array
      */
-    private $options = [];
+    protected $options = [];
 
     /**
      * @var resource|null
      */
-    private $resource;
+    protected $resource;
 
     public function __construct(
         string $url,

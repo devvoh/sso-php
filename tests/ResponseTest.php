@@ -2,10 +2,11 @@
 
 namespace SsoPhp\Tests;
 
+use PHPUnit\Framework\TestCase;
 use SsoPhp\Exceptions\SsoException;
 use SsoPhp\Response;
 
-class ResponseTest extends \PHPUnit\Framework\TestCase
+class ResponseTest extends TestCase
 {
     public function setUp()
     {
@@ -111,14 +112,14 @@ class ResponseTest extends \PHPUnit\Framework\TestCase
             [
                 'data_value' => 'yes please',
                 'metadata' => [
-                    'hello' => 'stuff goes here',
+                    'hello' => 'stuff',
                 ],
             ],
             'testingJson'
         );
 
         self::assertSame(
-            '{"status":"success","data":{"data_value":"yes please","metadata":{"hello":"stuff goes here"}},"call":"testingJson"}',
+            '{"status":"success","data":{"data_value":"yes please","metadata":{"hello":"stuff"}},"call":"testingJson"}',
             $response->toJson()
         );
     }

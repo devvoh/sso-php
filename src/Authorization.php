@@ -25,13 +25,6 @@ class Authorization
         ));
     }
 
-    /**
-     * @return string[]
-     */
-    public static function parseAuthorizationFromHeader(): array
-    {
-    }
-
     public static function parseBasicAuthorizationStringFromHeader(): array
     {
         $authorization = self::getAuthorizationStringFromHeader();
@@ -81,7 +74,7 @@ class Authorization
         return self::getTypeFromAuthorization($authorization) === 'bearer';
     }
 
-    private static function getAuthorizationStringFromHeader(): string
+    protected static function getAuthorizationStringFromHeader(): string
     {
         $headers = getallheaders();
 
@@ -94,7 +87,7 @@ class Authorization
         return $authorization;
     }
 
-    private static function getTypeFromAuthorization(string $authorization): ?string
+    protected static function getTypeFromAuthorization(string $authorization): ?string
     {
         if (substr($authorization, 0, 5) === 'Basic') {
             return 'basic';

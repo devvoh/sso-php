@@ -10,27 +10,27 @@ class Response
     /**
      * @var string
      */
-    private $call;
+    protected $call;
 
     /**
      * @var string
      */
-    private $status;
+    protected $status;
 
     /**
      * @var array
      */
-    private $data;
+    protected $data;
 
     /**
      * @var string|null
      */
-    private $errorMessage;
+    protected $errorMessage;
 
     /**
      * @var int|null
      */
-    private $errorCode;
+    protected $errorCode;
 
     public function __construct(
         string $status,

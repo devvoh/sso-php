@@ -330,8 +330,8 @@ class Server
                 throw ContextualSsoException::updateUserContextNotSupported();
             }
 
-            [$username,] = Authorization::parseBearerAuthorizationStringFromHeader();
-
+            /** @var string|null $username */
+            $username = $_POST['username'] ?? null;
             $context = $_POST['context'] ?? [];
 
             if (!$this->provider->updateUserContext($username, $context)) {

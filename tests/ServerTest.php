@@ -2,11 +2,12 @@
 
 namespace SsoPhp\Tests;
 
+use PHPUnit\Framework\TestCase;
 use SsoPhp\Provider\ProviderInterface;
 use SsoPhp\Response\ResponseErrors;
 use SsoPhp\Server;
 
-class ServerTest extends \PHPUnit\Framework\TestCase
+class ServerTest extends TestCase
 {
     public function setUp()
     {
@@ -275,13 +276,11 @@ class ServerTest extends \PHPUnit\Framework\TestCase
 
     public function testUpdateContext()
     {
-        $_SERVER['HTTP_AUTHORIZATION'] = 'Bearer ' . base64_encode('user:token');
-
         $server = $this->createNewServerWithSpecificCredentials('secret', 'token', $provider = new TestProvider());
 
         self::assertCount(1, $provider->users);
 
-        $_POST['authorization'] = base64_encode('user:token');
+        $_POST['username'] = 'user';
         $_POST['context'] = $context = ['context' => 'stuff'];
 
         $response = $server->updateUserContext();
@@ -296,7 +295,8 @@ class ServerTest extends \PHPUnit\Framework\TestCase
         ProviderInterface $provider = null
     ): Server {
         $server = new class ($provider ?? new TestProvider()) extends Server {
-            public function setCredentials(?string $clientSecret, ?string $clientToken): void {
+            public function setCredentials(?string $clientSecret, ?string $clientToken): void
+            {
                 $this->clientSecret = $clientSecret;
                 $this->clientToken = $clientToken;
             }

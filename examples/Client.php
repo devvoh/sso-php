@@ -161,7 +161,7 @@ if ($currentContext !== null) {
         $currentContext['example'] = 1;
     }
 
-    $response = $client->updateUserContext($user, $token, $currentContext);
+    $response = $client->updateUserContext($user, $currentContext);
 
     if ($response->isError()) {
         writeln("Could not update user context.");

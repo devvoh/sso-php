@@ -3,11 +3,12 @@
 namespace SsoPhp\Tests;
 
 use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use SsoPhp\CurlRequest;
 use SsoPhp\Client;
 
-class ClientTest extends \PHPUnit\Framework\TestCase
+class ClientTest extends TestCase
 {
     /**
      * @var Client|MockObject
@@ -193,14 +194,13 @@ class ClientTest extends \PHPUnit\Framework\TestCase
 
     public function testUpdateContext()
     {
-        $this->mockSsoClient->updateUserContext('user', 'token', [
+        $this->mockSsoClient->updateUserContext('user', [
             'stuff' => 'this be new dawg',
         ]);
 
         $this->assertSame('https://client.test/updateUserContext', $this->mockCurlRequest->getUrl());
         $this->assertSame(
             [
-                'Authorization: Bearer dXNlcjp0b2tlbg==',
                 'SsoPhp-Client-Secret: secret',
                 'SsoPhp-Client-Token: token',
             ],
@@ -210,7 +210,7 @@ class ClientTest extends \PHPUnit\Framework\TestCase
         self::assertTrue($this->mockCurlRequest->isPost());
 
         self::assertSame(
-            "context%5Bstuff%5D=this+be+new+dawg",
+            "username=user&context%5Bstuff%5D=this+be+new+dawg",
             $this->mockCurlRequest->getOption(CURLOPT_POSTFIELDS)
         );
     }

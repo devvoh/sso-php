@@ -110,15 +110,14 @@ class Client
         return $response;
     }
 
-    public function updateUserContext(string $username, string $token, array $context): Response
+    public function updateUserContext(string $username, array $context): Response
     {
         $response = $this->makeRequest(
             "POST",
             "updateUserContext",
+            [],
             [
-                "Authorization" => Authorization::buildBearerAuthorization($username, $token),
-            ],
-            [
+                'username' => $username,
                 'context' => $context,
             ]
         );
@@ -145,8 +144,7 @@ class Client
         string $call,
         array $headers = [],
         array $postValues = []
-    ): Response
-    {
+    ): Response {
         $url = $this->serverUrl . ltrim($call, "/");
 
         $curlRequest = $this->createCurlRequest($url);

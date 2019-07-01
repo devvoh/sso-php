@@ -7,7 +7,7 @@ abstract class AbstractException extends \Exception
     /**
      * @var string|null
      */
-    private $call;
+    protected $call;
 
     public function __construct(
         string $message = '',
